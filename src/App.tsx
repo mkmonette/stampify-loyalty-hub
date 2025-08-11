@@ -8,25 +8,59 @@ import NotFound from "./pages/NotFound";
 import { SuperAdminDashboard } from "./pages/dashboards/SuperAdminDashboard";
 import { BusinessAdminDashboard } from "./pages/dashboards/BusinessAdminDashboard";
 import { CustomerDashboard } from "./pages/dashboards/CustomerDashboard";
+import { AuthProvider } from "./context/AuthContext";
+import { RequireAuth } from "./routes/RequireAuth";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import { HelmetProvider } from "react-helmet-async";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/super-admin" element={<SuperAdminDashboard />} />
-          <Route path="/business-admin" element={<BusinessAdminDashboard />} />
-          <Route path="/customer" element={<CustomerDashboard />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <HelmetProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+
+              <Route
+                path="/super-admin"
+                element={
+                  <RequireAuth allowedRoles={["super-admin"]}>
+                    <SuperAdminDashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/business-admin"
+                element={
+                  <RequireAuth allowedRoles={["business-admin"]}>
+                    <BusinessAdminDashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/customer"
+                element={
+                  <RequireAuth allowedRoles={["customer"]}>
+                    <CustomerDashboard />
+                  </RequireAuth>
+                }
+              />
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 
