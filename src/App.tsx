@@ -22,6 +22,7 @@ import CouponsPage from "./pages/business/Coupons";
 import QRCodesPage from "./pages/business/QRCodes";
 import BusinessAnalyticsPage from "./pages/business/Analytics";
 import BusinessReferralsPage from "./pages/business/Referrals";
+import BrandingPage from "./pages/business/Branding";
 import CustomerLoyaltyCardsPage from "./pages/customer/LoyaltyCards";
 import CustomerRewardsPage from "./pages/customer/Rewards";
 import CustomerScanPage from "./pages/customer/Scan";
@@ -71,7 +72,7 @@ const App = () => (
                 <Route index element={<BusinessAdminDashboard />} />
                 <Route path="campaigns" element={<CampaignsPage />} />
                 <Route path="customers" element={<ComingSoon title="Customers" />} />
-                <Route path="branding" element={<ComingSoon title="Branding" />} />
+                <Route path="branding" element={<BrandingPage />} />
                 <Route path="rewards" element={<BusinessRewardsPage />} />
                 <Route path="coupons" element={<CouponsPage />} />
                 <Route path="qr-codes" element={<QRCodesPage />} />
