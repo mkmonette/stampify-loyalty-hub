@@ -1,0 +1,107 @@
+import { Helmet } from "react-helmet-async";
+import { useEffect, useMemo, useState } from "react";
+import { Campaigns, Campaign, seedIfEmpty } from "@/utils/localDb";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+
+export default function CampaignsPage() {
+  const [items, setItems] = useState<Campaign[]>([]);
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [stampsRequired, setStampsRequired] = useState(10);
+  const [active, setActive] = useState(true);
+
+  useEffect(() => {
+    seedIfEmpty();
+    setItems(Campaigns.list());
+  }, []);
+
+  const add = () => {
+    if (!name.trim()) return;
+    Campaigns.add({ name, description: desc, stampsRequired, active });
+    setItems(Campaigns.list());
+    setName("");
+    setDesc("");
+    setStampsRequired(10);
+    setActive(true);
+  };
+
+  const toggleActive = (id: string, value: boolean) => {
+    Campaigns.update(id, { active: value });
+    setItems(Campaigns.list());
+  };
+
+  const title = useMemo(() => `Campaigns | Stampify`, []);
+
+  return (
+    <main className="min-h-[calc(100vh-3rem)] p-6">
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content="Manage loyalty campaigns: create, activate, and configure stamp goals." />
+        <link rel="canonical" href={`${window.location.origin}${window.location.pathname}`} />
+      </Helmet>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Campaign</CardTitle>
+            <CardDescription>Define a new loyalty campaign</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <Input type="number" min={1} value={stampsRequired} onChange={(e) => setStampsRequired(parseInt(e.target.value || '1'))} />
+              <span className="text-sm text-muted-foreground">Stamps Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={active} onCheckedChange={setActive} />
+              <span className="text-sm">Active</span>
+            </div>
+            <Button onClick={add}>Add Campaign</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Existing Campaigns</CardTitle>
+            <CardDescription>Enable/disable or review campaigns</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableCaption>Campaigns and progress</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Goal</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{c.stampsRequired} stamps</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={c.active} onCheckedChange={(v) => toggleActive(c.id, v)} />
+                        <span className="text-xs text-muted-foreground">{c.active ? 'Active' : 'Inactive'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); setItems(Campaigns.list()); }}>Delete</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}

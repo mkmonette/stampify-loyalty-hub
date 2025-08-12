@@ -3,7 +3,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 import { useAuth } from "@/context/AuthContext";
 import { Role } from "@/utils/roles";
 import type { LucideIcon } from "lucide-react";
-import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaphone, Users, Palette, Gift, QrCode, Stamp, History, User } from "lucide-react";
+import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaphone, Users, Palette, Gift, QrCode, Stamp, History, User, TicketPercent, Share2 } from "lucide-react";
 
  type MenuItem = { title: string; url: string; icon: LucideIcon };
 
@@ -30,8 +30,10 @@ import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaph
           { title: "Customers", url: "/business-admin/customers", icon: Users },
           { title: "Branding", url: "/business-admin/branding", icon: Palette },
           { title: "Rewards", url: "/business-admin/rewards", icon: Gift },
+          { title: "Coupons", url: "/business-admin/coupons", icon: TicketPercent },
           { title: "QR Codes", url: "/business-admin/qr-codes", icon: QrCode },
           { title: "Analytics", url: "/business-admin/analytics", icon: BarChart3 },
+          { title: "Referrals", url: "/business-admin/referrals", icon: Share2 },
           { title: "Settings", url: "/business-admin/settings", icon: Settings },
           { title: "More", url: "/business-admin/more", icon: MoreHorizontal },
         ],
@@ -44,6 +46,8 @@ import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaph
           { title: "Overview", url: "/customer", icon: Home },
           { title: "Loyalty Cards", url: "/customer/loyalty-cards", icon: Stamp },
           { title: "Rewards", url: "/customer/rewards", icon: Gift },
+          { title: "Scan", url: "/customer/scan", icon: QrCode },
+          { title: "Referrals", url: "/customer/referrals", icon: Share2 },
           { title: "History", url: "/customer/history", icon: History },
           { title: "Profile", url: "/customer/profile", icon: User },
           { title: "More", url: "/customer/more", icon: MoreHorizontal },
