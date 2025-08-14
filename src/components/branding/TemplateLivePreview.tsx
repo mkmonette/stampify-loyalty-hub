@@ -24,14 +24,15 @@ export default function TemplateLivePreview({ id, colors, logoDataUrl, backgroun
     animationStyle === "glow-pulse" ? "pulse" :
     "animate-enter"; // subtle-bounce fallback
 
-  const layoutClass = layout === "vertical" ? "w-64 h-80" : "w-80 h-64";
+  const layoutClass = layout === "vertical" ? "w-64 min-h-80 max-w-64" : "w-80 min-h-64 max-w-80";
+  const paddingClass = layout === "vertical" ? "p-4" : "p-6";
   const styleClass = 
     templateStyle === "classic" ? "border-2 border-gray-300" :
     templateStyle === "minimal" ? "border border-gray-200" :
     templateStyle === "bold" ? "border-4 border-primary shadow-2xl" :
     ""; // modern default
   
-  const baseClass = `rounded-2xl bg-white p-8 relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass} ${layoutClass} ${styleClass}`;
+  const baseClass = `rounded-2xl bg-white ${paddingClass} relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass} ${layoutClass} ${styleClass}`;
 
   const bgStyle: React.CSSProperties = backgroundDataUrl
     ? { backgroundImage: `url(${backgroundDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
