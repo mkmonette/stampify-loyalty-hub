@@ -7,9 +7,11 @@ type Props = {
   logoDataUrl?: string;
   backgroundDataUrl?: string;
   animationStyle?: "subtle-bounce" | "fade" | "pop-scale" | "slide-in" | "glow-pulse";
+  layout?: "horizontal" | "vertical";
+  templateStyle?: "modern" | "classic" | "minimal" | "bold";
 };
 
-export default function TemplateLivePreview({ id, colors, logoDataUrl, backgroundDataUrl, animationStyle = "fade" }: Props) {
+export default function TemplateLivePreview({ id, colors, logoDataUrl, backgroundDataUrl, animationStyle = "fade", layout = "horizontal", templateStyle = "modern" }: Props) {
   const c = colors;
   const primary = c?.primary ?? "#FF8A00";
   const secondary = c?.secondary ?? "#10B981";
@@ -22,7 +24,14 @@ export default function TemplateLivePreview({ id, colors, logoDataUrl, backgroun
     animationStyle === "glow-pulse" ? "pulse" :
     "animate-enter"; // subtle-bounce fallback
 
-  const baseClass = `rounded-2xl bg-white p-8 relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass}`;
+  const layoutClass = layout === "vertical" ? "w-64 h-80" : "w-80 h-64";
+  const styleClass = 
+    templateStyle === "classic" ? "border-2 border-gray-300" :
+    templateStyle === "minimal" ? "border border-gray-200" :
+    templateStyle === "bold" ? "border-4 border-primary shadow-2xl" :
+    ""; // modern default
+  
+  const baseClass = `rounded-2xl bg-white p-8 relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass} ${layoutClass} ${styleClass}`;
 
   const bgStyle: React.CSSProperties = backgroundDataUrl
     ? { backgroundImage: `url(${backgroundDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }

@@ -41,6 +41,7 @@ type TenantSettings = {
   id: string; // same as ownerUserId (demo)
   ownerUserId: string;
   templateId: TemplateId;
+  layout?: "horizontal" | "vertical";
   // Customization
   paletteName?: string; // Named palette selection
   colors?: {
@@ -51,6 +52,9 @@ type TenantSettings = {
   logoDataUrl?: string; // base64 data URL for logo
   backgroundDataUrl?: string; // base64 data URL for background image
   animationStyle?: "subtle-bounce" | "fade" | "pop-scale" | "slide-in" | "glow-pulse";
+  templateStyle?: "modern" | "classic" | "minimal" | "bold";
+  stampSound?: "none" | "pop" | "ding" | "swoosh" | "chime";
+  celebrationAnimation?: "confetti" | "fireworks" | "sparkles" | "bounce" | "none";
   updatedAt: string;
 };
 
@@ -91,11 +95,15 @@ export function getBrandingForOwner(ownerUserId: string): TenantSettings {
     id: ownerUserId,
     ownerUserId,
     templateId: "grid",
+    layout: "horizontal",
     paletteName: undefined,
     colors: undefined,
     logoDataUrl: undefined,
     backgroundDataUrl: undefined,
     animationStyle: "fade",
+    templateStyle: "modern",
+    stampSound: "pop",
+    celebrationAnimation: "confetti",
     updatedAt: new Date().toISOString(),
   };
 }
@@ -113,11 +121,15 @@ export function setBrandingForOwner(ownerUserId: string, patch: Partial<TenantSe
     id: ownerUserId,
     ownerUserId,
     templateId: patch.templateId ?? "grid",
+    layout: patch.layout ?? "horizontal",
     paletteName: patch.paletteName,
     colors: patch.colors,
     logoDataUrl: patch.logoDataUrl,
     backgroundDataUrl: patch.backgroundDataUrl,
     animationStyle: patch.animationStyle ?? "fade",
+    templateStyle: patch.templateStyle ?? "modern",
+    stampSound: patch.stampSound ?? "pop",
+    celebrationAnimation: patch.celebrationAnimation ?? "confetti",
     updatedAt: new Date().toISOString(),
   };
   write([next, ...items]);
