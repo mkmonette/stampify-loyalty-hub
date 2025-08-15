@@ -44,6 +44,36 @@ function writeUsers(users: StoredUser[]) {
   localStorage.setItem(LS_USERS, JSON.stringify(users));
 }
 
+function seedDemoUsers() {
+  const users = readUsers();
+  if (users.length === 0) {
+    const demoUsers: StoredUser[] = [
+      {
+        id: "demo-super-admin",
+        email: "super@demo.com",
+        password: "demo123",
+        role: "super-admin",
+        name: "Super Admin Demo"
+      },
+      {
+        id: "demo-business-admin",
+        email: "business@demo.com",
+        password: "demo123",
+        role: "business-admin",
+        name: "Business Admin Demo"
+      },
+      {
+        id: "demo-customer",
+        email: "customer@demo.com",
+        password: "demo123",
+        role: "customer",
+        name: "Customer Demo"
+      }
+    ];
+    writeUsers(demoUsers);
+  }
+}
+
 function readSession(): AuthUser | null {
   try {
     const raw = localStorage.getItem(LS_SESSION);
@@ -62,6 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
+    seedDemoUsers();
     setUser(readSession());
   }, []);
 

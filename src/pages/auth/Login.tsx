@@ -91,10 +91,20 @@ export default function Login() {
             </form>
           </Form>
 
-          <p className="text-sm text-muted-foreground mt-6">
-            Don’t have an account? {" "}
-            <Link to="/register" className="text-primary hover:underline">Create one</Link>
-          </p>
+          <div className="mt-6 space-y-3">
+            <div className="bg-muted rounded-lg p-3">
+              <p className="text-sm font-medium text-foreground mb-2">Demo Credentials:</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div>Super Admin: super@demo.com / demo123</div>
+                <div>Business Admin: business@demo.com / demo123</div>
+                <div>Customer: customer@demo.com / demo123</div>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Don't have an account? {" "}
+              <Link to="/register" className="text-primary hover:underline">Create one</Link>
+            </p>
+          </div>
         </section>
       </main>
     </>
