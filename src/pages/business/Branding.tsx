@@ -1,159 +1,325 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
-import { TEMPLATE_CATALOG, TemplateId, getBrandingForOwner, setBrandingForOwner, BrandingSettings } from "@/utils/templates";
+import { getBrandingForOwner, setBrandingForOwner, BrandingSettings } from "@/utils/templates";
+import { Campaigns } from "@/utils/localDb";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/sonner";
-import TemplateMiniPreview from "@/components/branding/TemplateMiniPreview";
 import TemplateLivePreview from "@/components/branding/TemplateLivePreview";
 import PalettePicker from "@/components/branding/PalettePicker";
 import ImageUploader from "@/components/branding/ImageUploader";
 import { PaletteName, getPalette } from "@/utils/palettes";
+import { Palette, Grid, Layout, Volume2, Sparkles, Settings } from "lucide-react";
 
 export default function BrandingPage() {
   const { user } = useAuth();
   const ownerId = user?.id ?? "anon";
   const [saved, setSaved] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
   const [preview, setPreview] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
+  const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     const current = getBrandingForOwner(ownerId);
     setSaved(current);
     setPreview(current);
+    setCampaigns(Campaigns.list().map(c => ({ id: c.id, name: c.name })));
   }, [ownerId]);
 
   const onSave = () => {
     const next = setBrandingForOwner(ownerId, preview);
     setSaved(next);
     setPreview(next);
-    toast("Branding saved", { description: `Applied ${next.templateId} to your tenant.` });
+    toast("Stamp card customized successfully!", { description: "Your changes have been saved." });
   };
 
-  const title = useMemo(() => `Branding Templates | Stampify`, []);
-
+  const title = useMemo(() => `Stamp Card Designer | Stampify`, []);
   const effectiveColors = () => preview.colors ?? getPalette(preview.paletteName as PaletteName) ?? undefined;
-
+  const hasChanges = JSON.stringify(preview) !== JSON.stringify(saved);
 
   return (
     <main className="min-h-[calc(100vh-3rem)] p-6">
       <Helmet>
         <title>{title}</title>
-        <meta name="description" content="Choose from 9+ loyalty card templates, customize colors, logo, and background with live preview." />
+        <meta name="description" content="Design your custom stamp card with modern tools - customize layout, colors, animations, and link to campaigns." />
         <link rel="canonical" href={`${window.location.origin}${window.location.pathname}`} />
       </Helmet>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <section className="lg:col-span-2 space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Templates</h1>
-            <p className="text-sm text-muted-foreground">Pick a look and feel. Changes are saved per tenant.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {TEMPLATE_CATALOG.map((tpl) => (
-              <Card key={tpl.id} className={tpl.id === preview.templateId ? "ring-2 ring-primary" : ""}>
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Stamp Card Designer</h1>
+          <p className="text-muted-foreground">Create a beautiful, customized stamp card for your loyalty program</p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Live Preview Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Layout className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Live Preview</h2>
+            </div>
+            
+            <div className="flex justify-center">
+              <TemplateLivePreview 
+                id="grid"
+                colors={effectiveColors()} 
+                logoDataUrl={preview.logoDataUrl} 
+                backgroundDataUrl={preview.backgroundDataUrl} 
+                animationStyle={preview.animationStyle as any} 
+                layout={preview.layout as any} 
+                templateStyle={preview.templateStyle as any}
+                gridSize={preview.gridSize}
+                stampShape={preview.stampShape}
+                cornerRadius={preview.cornerRadius}
+              />
+            </div>
+
+            {hasChanges && (
+              <div className="flex gap-3 justify-center">
+                <Button onClick={onSave} size="lg" className="px-8">
+                  Save Changes
+                </Button>
+                <Button variant="outline" onClick={() => setPreview(saved)}>
+                  Reset
+                </Button>
+              </div>
+            )}
+          </section>
+
+          {/* Customization Panel */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Customization</h2>
+            </div>
+
+            <div className="space-y-6">
+              {/* Grid Layout */}
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{tpl.name}</span>
-                    {tpl.id === saved.templateId && <span className="text-xs text-muted-foreground">Saved</span>}
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid className="h-4 w-4" />
+                    Grid Layout
                   </CardTitle>
-                  <CardDescription>{tpl.description}</CardDescription>
+                  <CardDescription>Configure your stamp grid dimensions and style</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <TemplateMiniPreview id={tpl.id as TemplateId} colors={effectiveColors()} />
-                  <div className="flex gap-2">
-                    <Button variant={tpl.id === preview.templateId ? "default" : "outline"} size="sm" onClick={() => setPreview({ ...preview, templateId: tpl.id as TemplateId })}>Preview</Button>
-                    {tpl.id !== saved.templateId && tpl.id === preview.templateId && (
-                      <Button size="sm" onClick={onSave}>Save</Button>
-                    )}
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Orientation</Label>
+                      <Select value={preview.layout ?? "horizontal"} onValueChange={(value) => setPreview(p => ({ ...p, layout: value as any }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="horizontal">Horizontal</SelectItem>
+                          <SelectItem value="vertical">Vertical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Template Style</Label>
+                      <Select value={preview.templateStyle ?? "modern"} onValueChange={(value) => setPreview(p => ({ ...p, templateStyle: value as any }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="modern">Modern</SelectItem>
+                          <SelectItem value="classic">Classic</SelectItem>
+                          <SelectItem value="minimal">Minimal</SelectItem>
+                          <SelectItem value="bold">Bold</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Rows</Label>
+                      <Select value={preview.gridSize?.rows?.toString() ?? "2"} onValueChange={(value) => setPreview(p => ({ ...p, gridSize: { ...p.gridSize, rows: parseInt(value), cols: p.gridSize?.cols ?? 5 } }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4">4</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Columns</Label>
+                      <Select value={preview.gridSize?.cols?.toString() ?? "5"} onValueChange={(value) => setPreview(p => ({ ...p, gridSize: { rows: p.gridSize?.rows ?? 2, cols: parseInt(value) } }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4">4</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="6">6</SelectItem>
+                          <SelectItem value="8">8</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Stamp Shape</Label>
+                      <Select value={preview.stampShape ?? "rounded-square"} onValueChange={(value) => setPreview(p => ({ ...p, stampShape: value as any }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="square">Square</SelectItem>
+                          <SelectItem value="rounded-square">Rounded</SelectItem>
+                          <SelectItem value="circle">Circle</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Corner Radius</Label>
+                    <Select value={preview.cornerRadius ?? "medium"} onValueChange={(value) => setPreview(p => ({ ...p, cornerRadius: value as any }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </section>
 
-        <section className="lg:col-span-3 space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Live Preview</h2>
-          <TemplateLivePreview id={preview.templateId as TemplateId} colors={effectiveColors()} logoDataUrl={preview.logoDataUrl} backgroundDataUrl={preview.backgroundDataUrl} animationStyle={preview.animationStyle as any} layout={preview.layout as any} templateStyle={preview.templateStyle as any} />
-          {preview.templateId !== saved.templateId || preview.logoDataUrl !== saved.logoDataUrl || preview.backgroundDataUrl !== saved.backgroundDataUrl || JSON.stringify(preview.colors) !== JSON.stringify(saved.colors) || preview.paletteName !== saved.paletteName || preview.animationStyle !== saved.animationStyle || preview.layout !== saved.layout || preview.templateStyle !== saved.templateStyle || preview.stampSound !== saved.stampSound || preview.celebrationAnimation !== saved.celebrationAnimation ? (
-            <div className="flex gap-2">
-              <Button onClick={onSave}>Save Settings</Button>
-              <Button variant="outline" onClick={() => setPreview(saved)}>Revert</Button>
+              {/* Colors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    Colors & Branding
+                  </CardTitle>
+                  <CardDescription>Choose colors and upload your brand assets</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <PalettePicker
+                    paletteName={preview.paletteName as any}
+                    colors={preview.colors as any}
+                    onPaletteChange={(name) => setPreview(p => ({ ...p, paletteName: name }))}
+                    onColorsChange={(colors) => setPreview(p => ({ ...p, colors }))}
+                  />
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <ImageUploader label="Logo" value={preview.logoDataUrl} onChange={(v) => setPreview(p => ({ ...p, logoDataUrl: v }))} />
+                    <ImageUploader label="Background" value={preview.backgroundDataUrl} onChange={(v) => setPreview(p => ({ ...p, backgroundDataUrl: v }))} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Effects & Sounds */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Effects & Interactions
+                  </CardTitle>
+                  <CardDescription>Add animations and sounds to enhance user experience</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Animation Style</Label>
+                      <Select value={preview.animationStyle ?? "fade"} onValueChange={(value) => setPreview(p => ({ ...p, animationStyle: value as any }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="subtle-bounce">Subtle Bounce</SelectItem>
+                          <SelectItem value="fade">Fade In/Out</SelectItem>
+                          <SelectItem value="pop-scale">Pop Scale</SelectItem>
+                          <SelectItem value="slide-in">Slide In</SelectItem>
+                          <SelectItem value="glow-pulse">Glow Pulse</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        <Volume2 className="h-3 w-3" />
+                        Stamp Sound
+                      </Label>
+                      <Select value={preview.stampSound ?? "pop"} onValueChange={(value) => setPreview(p => ({ ...p, stampSound: value as any }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="pop">Pop</SelectItem>
+                          <SelectItem value="ding">Ding</SelectItem>
+                          <SelectItem value="swoosh">Swoosh</SelectItem>
+                          <SelectItem value="chime">Chime</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Celebration Animation</Label>
+                    <Select value={preview.celebrationAnimation ?? "confetti"} onValueChange={(value) => setPreview(p => ({ ...p, celebrationAnimation: value as any }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="confetti">Confetti</SelectItem>
+                        <SelectItem value="fireworks">Fireworks</SelectItem>
+                        <SelectItem value="sparkles">Sparkles</SelectItem>
+                        <SelectItem value="bounce">Bounce</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Campaign Linking */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Link to Campaign</CardTitle>
+                  <CardDescription>Connect this template to a specific loyalty campaign</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Label>Select Campaign</Label>
+                    <Select value={preview.linkedCampaignId ?? ""} onValueChange={(value) => setPreview(p => ({ ...p, linkedCampaignId: value || undefined }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a campaign..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No campaign linked</SelectItem>
+                        {campaigns.map(campaign => (
+                          <SelectItem key={campaign.id} value={campaign.id}>
+                            {campaign.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          ) : null}
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Customize</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Layout</label>
-                  <select className="w-full rounded-md border border-border bg-background p-2" value={preview.layout ?? "horizontal"} onChange={(e) => setPreview((p) => ({ ...p, layout: e.target.value as any }))}>
-                    <option value="horizontal">Horizontal</option>
-                    <option value="vertical">Vertical</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Template Style</label>
-                  <select className="w-full rounded-md border border-border bg-background p-2" value={preview.templateStyle ?? "modern"} onChange={(e) => setPreview((p) => ({ ...p, templateStyle: e.target.value as any }))}>
-                    <option value="modern">Modern</option>
-                    <option value="classic">Classic</option>
-                    <option value="minimal">Minimal</option>
-                    <option value="bold">Bold</option>
-                  </select>
-                </div>
-              </div>
-
-              <PalettePicker
-                paletteName={preview.paletteName as any}
-                colors={preview.colors as any}
-                onPaletteChange={(name) => setPreview((p) => ({ ...p, paletteName: name }))}
-                onColorsChange={(colors) => setPreview((p) => ({ ...p, colors }))}
-              />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <ImageUploader label="Logo" value={preview.logoDataUrl} onChange={(v) => setPreview((p) => ({ ...p, logoDataUrl: v }))} />
-                <ImageUploader label="Background" value={preview.backgroundDataUrl} onChange={(v) => setPreview((p) => ({ ...p, backgroundDataUrl: v }))} />
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Animation Style</label>
-                  <select className="w-full rounded-md border border-border bg-background p-2" value={preview.animationStyle ?? "fade"} onChange={(e) => setPreview((p) => ({ ...p, animationStyle: e.target.value as any }))}>
-                    <option value="subtle-bounce">Subtle Bounce</option>
-                    <option value="fade">Fade In / Out</option>
-                    <option value="pop-scale">Pop Scale</option>
-                    <option value="slide-in">Slide In</option>
-                    <option value="glow-pulse">Glow Pulse</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Stamp Sound</label>
-                  <select className="w-full rounded-md border border-border bg-background p-2" value={preview.stampSound ?? "pop"} onChange={(e) => setPreview((p) => ({ ...p, stampSound: e.target.value as any }))}>
-                    <option value="none">None</option>
-                    <option value="pop">Pop</option>
-                    <option value="ding">Ding</option>
-                    <option value="swoosh">Swoosh</option>
-                    <option value="chime">Chime</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Celebration Animation</label>
-                <select className="w-full rounded-md border border-border bg-background p-2" value={preview.celebrationAnimation ?? "confetti"} onChange={(e) => setPreview((p) => ({ ...p, celebrationAnimation: e.target.value as any }))}>
-                  <option value="confetti">Confetti</option>
-                  <option value="fireworks">Fireworks</option>
-                  <option value="sparkles">Sparkles</option>
-                  <option value="bounce">Bounce</option>
-                  <option value="none">None</option>
-                </select>
-              </div>
-            </div>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
   );
 }
-
