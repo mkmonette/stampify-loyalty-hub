@@ -300,12 +300,12 @@ export default function BrandingPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <Label>Select Campaign</Label>
-                    <Select value={preview.linkedCampaignId ?? ""} onValueChange={(value) => setPreview(p => ({ ...p, linkedCampaignId: value || undefined }))}>
+                    <Select value={preview.linkedCampaignId ?? "none"} onValueChange={(value) => setPreview(p => ({ ...p, linkedCampaignId: value === "none" ? undefined : value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose a campaign..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No campaign linked</SelectItem>
+                        <SelectItem value="none">No campaign linked</SelectItem>
                         {campaigns.map(campaign => (
                           <SelectItem key={campaign.id} value={campaign.id}>
                             {campaign.name}
