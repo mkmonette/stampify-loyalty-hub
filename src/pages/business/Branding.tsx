@@ -109,10 +109,6 @@ export default function BrandingPage() {
               <Settings className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Customization</h2>
             </div>
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Customization</h2>
-            </div>
 
             <div className="space-y-6">
               {/* Grid Layout */}
