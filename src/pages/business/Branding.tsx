@@ -13,7 +13,7 @@ import TemplateLivePreview from "@/components/branding/TemplateLivePreview";
 import PalettePicker from "@/components/branding/PalettePicker";
 import ImageUploader from "@/components/branding/ImageUploader";
 import { PaletteName, getPalette } from "@/utils/palettes";
-import { Palette, Grid, Layout, Volume2, Sparkles, Settings } from "lucide-react";
+import { Palette, Grid, Layout, Volume2, Sparkles, Settings, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function BrandingPage() {
   const { user } = useAuth();
@@ -21,6 +21,7 @@ export default function BrandingPage() {
   const [saved, setSaved] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
   const [preview, setPreview] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
   const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   useEffect(() => {
     const current = getBrandingForOwner(ownerId);
@@ -54,15 +55,26 @@ export default function BrandingPage() {
           <p className="text-muted-foreground">Create a beautiful, customized stamp card for your loyalty program</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Live Preview Section */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2">
+        {/* Mobile Preview Toggle */}
+        <button
+          onClick={() => setShowMobilePreview(!showMobilePreview)}
+          className="lg:hidden flex items-center justify-between w-full p-4 mb-4 rounded-lg bg-card border border-border hover:bg-accent transition-colors"
+        >
+          <span className="font-semibold">
+            {showMobilePreview ? "Hide Preview" : "Show Live Preview"}
+          </span>
+          {showMobilePreview ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </button>
+
+        {/* Mobile Preview */}
+        {showMobilePreview && (
+          <div className="lg:hidden mb-8 p-6 bg-card rounded-lg border border-border">
+            <div className="flex items-center gap-2 mb-6">
               <Layout className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Live Preview</h2>
             </div>
             
-            <div className="flex justify-center">
+            <div className="flex justify-center mb-6">
               <TemplateLivePreview 
                 id="grid"
                 colors={effectiveColors()} 
@@ -87,10 +99,16 @@ export default function BrandingPage() {
                 </Button>
               </div>
             )}
-          </section>
+          </div>
+        )}
 
+        <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
           {/* Customization Panel */}
-          <section className="space-y-6">
+          <section className="space-y-6 order-2 lg:order-1">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Customization</h2>
+            </div>
             <div className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Customization</h2>
@@ -316,6 +334,42 @@ export default function BrandingPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </section>
+
+          {/* Live Preview Section - Sticky on Right */}
+          <section className="hidden lg:block space-y-6 order-1 lg:order-2">
+            <div className="lg:sticky lg:top-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Layout className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Live Preview</h2>
+              </div>
+              
+              <div className="flex justify-center mb-6">
+                <TemplateLivePreview 
+                  id="grid"
+                  colors={effectiveColors()} 
+                  logoDataUrl={preview.logoDataUrl} 
+                  backgroundDataUrl={preview.backgroundDataUrl} 
+                  animationStyle={preview.animationStyle as any} 
+                  layout={preview.layout as any} 
+                  templateStyle={preview.templateStyle as any}
+                  gridSize={preview.gridSize}
+                  stampShape={preview.stampShape}
+                  cornerRadius={preview.cornerRadius}
+                />
+              </div>
+
+              {hasChanges && (
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={onSave} size="lg" className="px-8">
+                    Save Changes
+                  </Button>
+                  <Button variant="outline" onClick={() => setPreview(saved)}>
+                    Reset
+                  </Button>
+                </div>
+              )}
             </div>
           </section>
         </div>
