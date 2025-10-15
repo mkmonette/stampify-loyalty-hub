@@ -35,7 +35,7 @@ export default function TemplateLivePreview({
   const earnedStamps = 3;
   const progressPercentage = (earnedStamps / totalStamps) * 100;
 
-  // Classic template has different styling
+  // Classic template - elegant, traditional design
   if (templateStyle === "classic") {
     const animClass = animationStyle === "fade" ? "animate-fade-in" : "animate-fade-in";
     const layoutClass = layout === "vertical" ? "w-64 min-h-96 max-w-64" : "w-80 min-h-96 max-w-80";
@@ -83,16 +83,13 @@ export default function TemplateLivePreview({
         style={bgStyle}
       >
         <div className="relative space-y-5 flex flex-col items-center">
-          {/* Logo */}
           <ClassicLogo />
           
-          {/* Title & Description */}
           <div className="text-center space-y-1">
             <h3 className="text-xl font-serif font-bold text-gray-800">Stamp Collection Card</h3>
             <p className="text-sm text-gray-600 font-serif">Collect {totalStamps} stamps for rewards</p>
           </div>
           
-          {/* Stamp Grid */}
           <div 
             className="grid gap-2 w-full" 
             style={{ 
@@ -114,7 +111,6 @@ export default function TemplateLivePreview({
             ))}
           </div>
           
-          {/* Progress Section */}
           <div className="w-full space-y-2">
             <div className="text-center text-gray-700 font-serif font-medium text-sm">
               {earnedStamps} of {totalStamps} stamps
@@ -130,7 +126,6 @@ export default function TemplateLivePreview({
             </div>
           </div>
           
-          {/* Action Buttons */}
           <div className="flex gap-3 w-full mt-2">
             <button 
               className="flex-1 border border-gray-400 text-gray-700 hover:bg-gray-100 font-medium py-2 px-4 rounded-md transition-colors duration-200"
@@ -153,6 +148,109 @@ export default function TemplateLivePreview({
     );
   }
 
+  // Minimal template - clean, airy design with focus on simplicity
+  if (templateStyle === "minimal") {
+    const animClass = animationStyle === "fade" ? "animate-fade-in" : 
+                      animationStyle === "pop-scale" ? "animate-scale-in" : "";
+    const layoutClass = layout === "vertical" ? "w-64 min-h-96 max-w-64" : "w-80 min-h-80 max-w-80";
+    
+    const MinimalLogo = () => (
+      logoDataUrl ? (
+        <img 
+          src={logoDataUrl} 
+          alt="Logo" 
+          className="h-8 w-8 rounded object-cover" 
+        />
+      ) : (
+        <div 
+          className="h-8 w-8 rounded flex items-center justify-center text-white text-[10px] font-semibold" 
+          style={{ backgroundColor: primary }}
+        >
+          LG
+        </div>
+      )
+    );
+
+    const bgStyle: React.CSSProperties = backgroundDataUrl
+      ? { backgroundImage: `url(${backgroundDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+      : { backgroundColor: "#ffffff" };
+
+    return (
+      <div 
+        className={`bg-white p-4 sm:p-6 relative overflow-hidden transition-all duration-300 ${animClass} ${layoutClass}`}
+        style={bgStyle}
+      >
+        <div className="relative space-y-6">
+          {/* Logo in top-right */}
+          <div className="flex justify-end">
+            <MinimalLogo />
+          </div>
+          
+          {/* Title & Description */}
+          <div className="text-center space-y-1">
+            <h3 className="text-lg font-sans font-semibold text-gray-900">Stamp Collection Card</h3>
+            <p className="text-xs text-gray-500">Collect {totalStamps} stamps for rewards</p>
+          </div>
+          
+          {/* Stamp Grid - always circular for minimal */}
+          <div 
+            className="grid gap-3 w-full" 
+            style={{ 
+              gridTemplateColumns: `repeat(${cols}, 1fr)`, 
+              gridTemplateRows: `repeat(${rows}, 1fr)` 
+            }}
+          >
+            {Array.from({ length: totalStamps }, (_, i) => (
+              <div 
+                key={i} 
+                className="aspect-square rounded-full flex items-center justify-center transition-all duration-200"
+                style={{ 
+                  backgroundColor: i < earnedStamps ? primary : "#F3F4F6",
+                  color: i < earnedStamps ? "white" : "transparent"
+                }}
+              >
+                {i < earnedStamps ? "★" : ""}
+              </div>
+            ))}
+          </div>
+          
+          {/* Minimal Progress */}
+          <div className="w-full space-y-2">
+            <div className="text-center text-gray-600 text-sm font-sans">
+              {earnedStamps} / {totalStamps}
+            </div>
+            <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full transition-all duration-500"
+                style={{ 
+                  width: `${progressPercentage}%`,
+                  backgroundColor: primary
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Flat Buttons */}
+          <div className="flex gap-2 w-full">
+            <button 
+              className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              ★
+            </button>
+            <button 
+              className="flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-white"
+              style={{ 
+                backgroundColor: primary
+              }}
+            >
+              ⚡
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Modern and other templates
   const animClass =
     animationStyle === "fade" ? "animate-fade-in" :
@@ -164,7 +262,6 @@ export default function TemplateLivePreview({
   const layoutClass = layout === "vertical" ? "w-64 min-h-80 max-w-64" : "w-80 min-h-64 max-w-80";
   const paddingClass = layout === "vertical" ? "p-4" : "p-6";
   const styleClass = 
-    templateStyle === "minimal" ? "border border-gray-200" :
     templateStyle === "bold" ? "border-4 border-primary shadow-2xl" :
     "";
   
