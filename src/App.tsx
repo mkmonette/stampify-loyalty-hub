@@ -28,6 +28,7 @@ import CustomerRewardsPage from "./pages/customer/Rewards";
 import CustomerScanPage from "./pages/customer/Scan";
 import CustomerReferralsPage from "./pages/customer/Referrals";
 import SuperAdminAnalyticsPage from "./pages/super/Analytics";
+import CampaignPublicPage from "./pages/CampaignPublicPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/campaigns/:businessSlug" element={<CampaignPublicPage />} />
 
               {/* Super Admin */}
               <Route

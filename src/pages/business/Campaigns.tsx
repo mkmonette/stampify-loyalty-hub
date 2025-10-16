@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { Copy, ExternalLink } from "lucide-react";
 
 export default function CampaignsPage() {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -35,6 +37,16 @@ export default function CampaignsPage() {
   };
 
   const title = useMemo(() => `Campaigns | Stampify`, []);
+
+  const copyLink = (slug: string) => {
+    const url = `${window.location.origin}/campaigns/${slug}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Campaign link copied to clipboard!");
+  };
+
+  const previewCampaign = (slug: string) => {
+    window.open(`/campaigns/${slug}`, '_blank');
+  };
 
   return (
     <main className="min-h-[calc(100vh-3rem)] p-6">
@@ -78,6 +90,7 @@ export default function CampaignsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Goal</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Link</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -90,6 +103,26 @@ export default function CampaignsPage() {
                       <div className="flex items-center gap-2">
                         <Switch checked={c.active} onCheckedChange={(v) => toggleActive(c.id, v)} />
                         <span className="text-xs text-muted-foreground">{c.active ? 'Active' : 'Inactive'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => copyLink(c.slug)}
+                          title="Copy link"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => previewCampaign(c.slug)}
+                          title="Preview"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

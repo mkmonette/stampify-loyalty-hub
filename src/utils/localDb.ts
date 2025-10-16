@@ -6,6 +6,7 @@ export type ID = string;
 export type Campaign = {
   id: ID;
   name: string;
+  slug: string;
   description?: string;
   stampsRequired: number;
   active: boolean;
@@ -81,11 +82,21 @@ function uid() {
   return crypto.randomUUID();
 }
 
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 // Campaigns
 export const Campaigns = {
   list: (): Campaign[] => read<Campaign>(DB.campaigns),
-  add: (input: Omit<Campaign, 'id' | 'createdAt'>): Campaign => {
-    const next: Campaign = { id: uid(), createdAt: new Date().toISOString(), ...input };
+  add: (input: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign => {
+    const slug = generateSlug(input.name);
+    const next: Campaign = { id: uid(), slug, createdAt: new Date().toISOString(), ...input };
     const items = Campaigns.list();
     write(DB.campaigns, [next, ...items]);
     return next;
@@ -95,6 +106,7 @@ export const Campaigns = {
     write(DB.campaigns, items);
   },
   remove: (id: ID) => write(DB.campaigns, Campaigns.list().filter((c) => c.id !== id)),
+  findBySlug: (slug: string): Campaign | undefined => Campaigns.list().find((c) => c.slug === slug),
 };
 
 // Rewards
