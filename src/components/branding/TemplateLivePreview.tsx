@@ -251,6 +251,146 @@ export default function TemplateLivePreview({
     );
   }
 
+  // Bold template - vibrant, dynamic design with strong contrast
+  if (templateStyle === "bold") {
+    const animClass = animationStyle === "fade" ? "animate-fade-in" : 
+                      animationStyle === "pop-scale" ? "animate-scale-in" : 
+                      animationStyle === "glow-pulse" ? "pulse" : "animate-scale-in";
+    const layoutClass = layout === "vertical" ? "w-64 min-h-96 max-w-64" : "w-80 min-h-96 max-w-80";
+    
+    const shape = stampShape || "circle";
+    const radius = cornerRadius || "large";
+    
+    const radiusClass = {
+      none: "rounded-none",
+      small: "rounded-sm",
+      medium: "rounded-md",
+      large: "rounded-lg"
+    }[radius];
+    
+    const shapeClass = {
+      square: radiusClass,
+      circle: "rounded-full",
+      "rounded-square": radiusClass
+    }[shape];
+
+    const BoldLogo = () => (
+      logoDataUrl ? (
+        <div className="relative">
+          <div className="absolute inset-0 rounded-xl blur-md opacity-60" style={{ backgroundColor: accent }} />
+          <img 
+            src={logoDataUrl} 
+            alt="Business logo" 
+            className="relative h-14 w-14 rounded-xl border-4 border-white object-cover shadow-xl" 
+          />
+        </div>
+      ) : (
+        <div className="relative">
+          <div className="absolute inset-0 rounded-xl blur-md opacity-60" style={{ backgroundColor: accent }} />
+          <div 
+            className="relative h-14 w-14 rounded-xl border-4 border-white flex items-center justify-center text-white text-xs font-black shadow-xl" 
+            style={{ backgroundColor: primary }}
+          >
+            LOGO
+          </div>
+        </div>
+      )
+    );
+
+    const bgStyle: React.CSSProperties = backgroundDataUrl
+      ? { backgroundImage: `url(${backgroundDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+      : { 
+          background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
+        };
+
+    return (
+      <div 
+        className={`rounded-2xl p-6 relative overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 ring-2 ring-white/20 ${animClass} ${layoutClass}`}
+        style={bgStyle}
+      >
+        <div className="relative space-y-5 flex flex-col">
+          {/* Logo in top-left */}
+          <div className="flex justify-start">
+            <BoldLogo />
+          </div>
+          
+          {/* Title & Description */}
+          <div className="text-center space-y-2">
+            <h3 className="text-white text-2xl font-extrabold tracking-wide drop-shadow-lg font-sans">
+              Stamp Collection Card
+            </h3>
+            <p className="text-white/90 text-sm font-semibold">
+              Collect {totalStamps} stamps for rewards
+            </p>
+          </div>
+          
+          {/* Stamp Grid - larger with glow effects */}
+          <div 
+            className="grid gap-3 w-full" 
+            style={{ 
+              gridTemplateColumns: `repeat(${cols}, 1fr)`, 
+              gridTemplateRows: `repeat(${rows}, 1fr)` 
+            }}
+          >
+            {Array.from({ length: totalStamps }, (_, i) => (
+              <div 
+                key={i} 
+                className={`aspect-square ${shapeClass} flex items-center justify-center text-2xl transition-all duration-300 ${
+                  i < earnedStamps ? "shadow-xl scale-105 animate-pulse" : "shadow-md"
+                }`}
+                style={{ 
+                  backgroundColor: i < earnedStamps ? "white" : "rgba(255, 255, 255, 0.2)",
+                  color: i < earnedStamps ? primary : "rgba(255, 255, 255, 0.4)",
+                  border: i < earnedStamps ? "none" : "2px solid rgba(255, 255, 255, 0.3)"
+                }}
+              >
+                {i < earnedStamps ? "★" : ""}
+              </div>
+            ))}
+          </div>
+          
+          {/* Vibrant Progress */}
+          <div className="w-full space-y-3">
+            <div className="text-center text-white font-bold text-base drop-shadow-md">
+              {earnedStamps} of {totalStamps} stamps
+            </div>
+            <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <div 
+                className="h-full transition-all duration-500 rounded-full shadow-lg"
+                style={{ 
+                  width: `${progressPercentage}%`,
+                  backgroundColor: "white",
+                  boxShadow: `0 0 20px ${accent}`
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Bold Buttons */}
+          <div className="flex gap-3 w-full mt-2">
+            <button 
+              className="flex-1 bg-white font-bold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg text-lg"
+              style={{ 
+                color: primary
+              }}
+            >
+              ★
+            </button>
+            <button 
+              className="flex-1 font-bold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg text-lg"
+              style={{ 
+                backgroundColor: accent,
+                color: "white"
+              }}
+            >
+              ⚡
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Modern and other templates
   const animClass =
     animationStyle === "fade" ? "animate-fade-in" :
@@ -261,11 +401,8 @@ export default function TemplateLivePreview({
 
   const layoutClass = layout === "vertical" ? "w-64 min-h-80 max-w-64" : "w-80 min-h-64 max-w-80";
   const paddingClass = layout === "vertical" ? "p-4" : "p-6";
-  const styleClass = 
-    templateStyle === "bold" ? "border-4 border-primary shadow-2xl" :
-    "";
   
-  const baseClass = `rounded-2xl bg-white ${paddingClass} relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass} ${layoutClass} ${styleClass}`;
+  const baseClass = `rounded-2xl bg-white ${paddingClass} relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${animClass} ${layoutClass}`;
 
   const bgStyle: React.CSSProperties = backgroundDataUrl
     ? { backgroundImage: `url(${backgroundDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
