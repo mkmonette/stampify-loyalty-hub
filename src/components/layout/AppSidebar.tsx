@@ -1,9 +1,10 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Role } from "@/utils/roles";
 import type { LucideIcon } from "lucide-react";
-import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaphone, Users, Palette, Gift, QrCode, Stamp, History, User, TicketPercent, Share2 } from "lucide-react";
+import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaphone, Users, Palette, Gift, QrCode, Stamp, History, User, TicketPercent, Share2, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
  type MenuItem = { title: string; url: string; icon: LucideIcon };
 
@@ -57,12 +58,18 @@ import { Home, Building, CreditCard, BarChart3, Settings, MoreHorizontal, Megaph
 }
 
 export function AppSidebar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const role: Role = user?.role ?? "customer";
   const { title, items } = getMenu(role);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <Sidebar collapsible="icon" className="bg-card text-foreground border-r border-border">
@@ -92,7 +99,25 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarSeparator />
       </SidebarContent>
-      <SidebarFooter className="text-xs text-muted-foreground px-2 pb-2">And others</SidebarFooter>
+      <SidebarFooter className="p-2 border-t border-border">
+        <div className="flex flex-col gap-2">
+          {user && (
+            <div className="px-2 py-1 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground truncate">{user.name || user.email}</p>
+              <p className="truncate">{user.email}</p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Log out</span>
+          </Button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
