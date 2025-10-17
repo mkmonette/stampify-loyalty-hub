@@ -8,8 +8,10 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Users } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CampaignsPage() {
+  const { user } = useAuth();
   const [items, setItems] = useState<Campaign[]>([]);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -23,7 +25,13 @@ export default function CampaignsPage() {
 
   const add = () => {
     if (!name.trim()) return;
-    Campaigns.add({ name, description: desc, stampsRequired, active });
+    Campaigns.add({ 
+      name, 
+      description: desc, 
+      stampsRequired, 
+      active,
+      ownerId: user?.id // Set the current user as the owner
+    });
     setItems(Campaigns.list());
     setName("");
     setDesc("");

@@ -1,21 +1,31 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Campaigns, Campaign, CustomerCampaigns } from "@/utils/localDb";
+import { useEffect, useState, useRef } from "react";
+import { Campaigns, Campaign, CustomerCampaigns, Rewards, Cards } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Stamp, Gift, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Stamp, Gift, ArrowRight, CheckCircle2, Mail, Phone, Globe, Facebook, Instagram, Twitter, Download } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { CampaignRegistrationModal } from "@/components/modals/CampaignRegistrationModal";
+import { getBrandingForOwner, BrandingSettings } from "@/utils/templates";
+import ThemedCampaignCard from "@/components/campaign/ThemedCampaignCard";
+import QRCode from "qrcode";
 
 export default function CampaignPublicPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [branding, setBranding] = useState<BrandingSettings | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [showRegistration, setShowRegistration] = useState(false);
   const { user } = useAuth();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const hasJoined = user && campaign ? CustomerCampaigns.hasJoined(user.email, campaign.id) : false;
+  const userStamps = user && campaign && hasJoined 
+    ? Cards.byUser(user.email).find(c => c.campaignId === campaign.id)?.stamps || 0
+    : 0;
+  const campaignRewards = campaign ? Rewards.list().filter(r => r.active) : [];
 
   useEffect(() => {
     if (!businessSlug) {
@@ -25,8 +35,29 @@ export default function CampaignPublicPage() {
     
     const found = Campaigns.findBySlug(businessSlug);
     setCampaign(found || null);
+    
+    if (found?.ownerId) {
+      const brandingSettings = getBrandingForOwner(found.ownerId);
+      setBranding(brandingSettings);
+    }
+    
     setLoading(false);
   }, [businessSlug]);
+
+  // Generate QR code
+  useEffect(() => {
+    if (campaign) {
+      const campaignUrl = `${window.location.origin}/campaigns/${campaign.slug}`;
+      QRCode.toDataURL(campaignUrl, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: branding?.colors?.primary || "#000000",
+          light: "#FFFFFF"
+        }
+      }).then(setQrCodeUrl);
+    }
+  }, [campaign, branding]);
 
   if (loading) {
     return (
@@ -69,12 +100,18 @@ export default function CampaignPublicPage() {
         <link rel="canonical" href={`${window.location.origin}/campaigns/${campaign.slug}`} />
       </Helmet>
 
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
+      <main className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-            <Stamp className="w-10 h-10 text-primary" />
-          </div>
+          {branding?.logoDataUrl && (
+            <div className="inline-flex items-center justify-center mb-6">
+              <img 
+                src={branding.logoDataUrl} 
+                alt="Business logo" 
+                className="h-24 w-24 rounded-full object-cover shadow-lg"
+              />
+            </div>
+          )}
           
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             {campaign.name}
@@ -87,45 +124,200 @@ export default function CampaignPublicPage() {
           )}
         </div>
 
-        {/* Campaign Info Card */}
-        <Card className="mb-8 border-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="w-5 h-5 text-primary" />
-              Campaign Details
-            </CardTitle>
-            <CardDescription>
-              Start collecting stamps to earn exclusive rewards
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Stamps Required</span>
-              <span className="text-2xl font-bold text-primary">{campaign.stampsRequired}</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Campaign Status</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                campaign.active 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-              }`}>
-                {campaign.active ? 'Active' : 'Inactive'}
-              </span>
-            </div>
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {/* Stamp Card Preview */}
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+              <Stamp className="w-6 h-6 text-primary" />
+              Your Loyalty Card
+            </h2>
+            {branding && (
+              <ThemedCampaignCard 
+                campaign={campaign}
+                branding={branding}
+                earnedStamps={userStamps}
+                isReadOnly={true}
+              />
+            )}
+          </div>
 
-            {/* QR Code Placeholder */}
-            <div className="mt-6 p-8 bg-muted/30 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-border">
-              <div className="w-48 h-48 bg-background rounded-lg flex items-center justify-center mb-4 shadow-sm">
-                <span className="text-4xl font-mono text-muted-foreground">QR</span>
+          {/* QR Code & Info */}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-primary" />
+                Scan to Join
+              </CardTitle>
+              <CardDescription>
+                Use this QR code to join the campaign and start earning stamps
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col items-center p-6 bg-muted/30 rounded-xl">
+                {qrCodeUrl ? (
+                  <>
+                    <img 
+                      src={qrCodeUrl} 
+                      alt="Campaign QR Code" 
+                      className="w-48 h-48 rounded-lg shadow-md mb-4"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.download = `${campaign.slug}-qr-code.png`;
+                        link.href = qrCodeUrl;
+                        link.click();
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download QR Code
+                    </Button>
+                  </>
+                ) : (
+                  <div className="w-48 h-48 bg-background rounded-lg flex items-center justify-center shadow-sm">
+                    <span className="text-4xl font-mono text-muted-foreground">QR</span>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground text-center">
-                Scan this QR code at participating locations to collect stamps
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+              
+              <div className="space-y-2 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Stamps Required</span>
+                  <span className="text-xl font-bold text-primary">{campaign.stampsRequired}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Status</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    campaign.active 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {campaign.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rewards Section */}
+        {campaignRewards.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-primary" />
+                Available Rewards
+              </CardTitle>
+              <CardDescription>
+                Redeem your stamps for these exclusive rewards
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {campaignRewards.map((reward) => (
+                  <div 
+                    key={reward.id}
+                    className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-card"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold">{reward.name}</h3>
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {reward.stampsRequired} stamps
+                      </span>
+                    </div>
+                    {reward.description && (
+                      <p className="text-sm text-muted-foreground">{reward.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contact & Social Links */}
+        {(campaign.contactEmail || campaign.contactPhone || campaign.socialLinks) && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Contact & Follow Us</CardTitle>
+              <CardDescription>Stay connected and reach out anytime</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4">
+                {campaign.contactEmail && (
+                  <a 
+                    href={`mailto:${campaign.contactEmail}`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span className="text-sm">{campaign.contactEmail}</span>
+                  </a>
+                )}
+                
+                {campaign.contactPhone && (
+                  <a 
+                    href={`tel:${campaign.contactPhone}`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span className="text-sm">{campaign.contactPhone}</span>
+                  </a>
+                )}
+                
+                {campaign.socialLinks?.website && (
+                  <a 
+                    href={campaign.socialLinks.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span className="text-sm">Website</span>
+                  </a>
+                )}
+                
+                {campaign.socialLinks?.facebook && (
+                  <a 
+                    href={campaign.socialLinks.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Facebook className="w-4 h-4" />
+                    <span className="text-sm">Facebook</span>
+                  </a>
+                )}
+                
+                {campaign.socialLinks?.instagram && (
+                  <a 
+                    href={campaign.socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    <span className="text-sm">Instagram</span>
+                  </a>
+                )}
+                
+                {campaign.socialLinks?.twitter && (
+                  <a 
+                    href={campaign.socialLinks.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <Twitter className="w-4 h-4" />
+                    <span className="text-sm">Twitter</span>
+                  </a>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* CTA Section */}
         <div className="text-center space-y-4">

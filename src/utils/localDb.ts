@@ -11,6 +11,15 @@ export type Campaign = {
   stampsRequired: number;
   active: boolean;
   createdAt: string;
+  ownerId?: ID; // Business owner ID for branding
+  contactEmail?: string;
+  contactPhone?: string;
+  socialLinks?: {
+    website?: string;
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+  };
 };
 
 export type Reward = {
@@ -221,8 +230,27 @@ export const CustomerCampaigns = {
 // Seed demo data if empty
 export function seedIfEmpty() {
   if (Campaigns.list().length === 0) {
-    Campaigns.add({ name: 'Coffee Lovers', description: 'Buy 9 get 1 free', stampsRequired: 10, active: true });
-    Campaigns.add({ name: 'Sandwich Club', description: 'Collect 5 stamps', stampsRequired: 5, active: true });
+    // Use demo business admin ID for campaigns
+    Campaigns.add({ 
+      name: 'Coffee Lovers', 
+      description: 'Buy 9 get 1 free', 
+      stampsRequired: 10, 
+      active: true,
+      ownerId: 'demo-business-admin',
+      contactEmail: 'coffee@demo.com',
+      socialLinks: {
+        website: 'https://example.com',
+        instagram: 'https://instagram.com/coffeelovers'
+      }
+    });
+    Campaigns.add({ 
+      name: 'Sandwich Club', 
+      description: 'Collect 5 stamps', 
+      stampsRequired: 5, 
+      active: true,
+      ownerId: 'demo-business-admin',
+      contactEmail: 'sandwich@demo.com'
+    });
   }
   if (Rewards.list().length === 0) {
     Rewards.add({ name: 'Free Coffee', description: 'Redeem with 10 stamps', stampsRequired: 10, active: true });
