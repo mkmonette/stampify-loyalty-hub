@@ -1,13 +1,13 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
-import { Campaigns, Campaign, seedIfEmpty } from "@/utils/localDb";
+import { Campaigns, Campaign, CustomerCampaigns, seedIfEmpty } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Users } from "lucide-react";
 
 export default function CampaignsPage() {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -89,6 +89,7 @@ export default function CampaignsPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Goal</TableHead>
+                  <TableHead>Customers</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Link</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -99,6 +100,12 @@ export default function CampaignsPage() {
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.stampsRequired} stamps</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{CustomerCampaigns.countByCampaign(c.id)}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch checked={c.active} onCheckedChange={(v) => toggleActive(c.id, v)} />

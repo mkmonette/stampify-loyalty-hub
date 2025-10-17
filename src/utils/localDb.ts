@@ -54,6 +54,13 @@ export type Referral = {
   createdAt: string;
 };
 
+export type CustomerCampaign = {
+  id: ID;
+  customerId: ID; // user email
+  campaignId: ID;
+  dateJoined: string;
+};
+
 const DB = {
   campaigns: 'db_campaigns',
   rewards: 'db_rewards',
@@ -61,6 +68,7 @@ const DB = {
   cards: 'db_loyalty_cards',
   redemptions: 'db_redemptions',
   referrals: 'db_referrals',
+  customerCampaigns: 'db_customer_campaigns',
 } as const;
 
 type Key = typeof DB[keyof typeof DB];
@@ -192,6 +200,22 @@ export const Referrals = {
     const items = Referrals.list().map((r) => (r.id === id ? { ...r, referredCount: r.referredCount + count } : r));
     write(DB.referrals, items);
   },
+};
+
+// Customer Campaigns
+export const CustomerCampaigns = {
+  list: (): CustomerCampaign[] => read<CustomerCampaign>(DB.customerCampaigns),
+  hasJoined: (customerId: ID, campaignId: ID): boolean => 
+    CustomerCampaigns.list().some((cc) => cc.customerId === customerId && cc.campaignId === campaignId),
+  join: (customerId: ID, campaignId: ID): CustomerCampaign => {
+    const existing = CustomerCampaigns.list().find((cc) => cc.customerId === customerId && cc.campaignId === campaignId);
+    if (existing) return existing;
+    const next: CustomerCampaign = { id: uid(), customerId, campaignId, dateJoined: new Date().toISOString() };
+    write(DB.customerCampaigns, [next, ...CustomerCampaigns.list()]);
+    return next;
+  },
+  countByCampaign: (campaignId: ID): number => 
+    CustomerCampaigns.list().filter((cc) => cc.campaignId === campaignId).length,
 };
 
 // Seed demo data if empty

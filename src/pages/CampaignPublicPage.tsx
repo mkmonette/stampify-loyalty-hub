@@ -1,15 +1,21 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Campaigns, Campaign } from "@/utils/localDb";
+import { Campaigns, Campaign, CustomerCampaigns } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Stamp, Gift, ArrowRight } from "lucide-react";
+import { Stamp, Gift, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { CampaignRegistrationModal } from "@/components/modals/CampaignRegistrationModal";
 
 export default function CampaignPublicPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const { user } = useAuth();
+  
+  const hasJoined = user && campaign ? CustomerCampaigns.hasJoined(user.email, campaign.id) : false;
 
   useEffect(() => {
     if (!businessSlug) {
@@ -123,26 +129,72 @@ export default function CampaignPublicPage() {
 
         {/* CTA Section */}
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-semibold mb-4">Ready to Start Earning?</h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" className="w-full sm:w-auto group">
-                Join Campaign
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Already a Member? Log In
-              </Button>
-            </Link>
-          </div>
-          
-          <p className="text-xs text-muted-foreground mt-6">
-            By joining, you agree to our terms of service and privacy policy
-          </p>
+          {hasJoined ? (
+            <Card className="border-2 border-green-500/20 bg-green-500/5">
+              <CardContent className="pt-6 pb-6">
+                <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 mb-2">
+                  <CheckCircle2 className="w-6 h-6" />
+                  <h2 className="text-xl font-semibold">You're Already In!</h2>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  You've already joined this campaign. Visit your dashboard to view your stamps.
+                </p>
+                <Link to="/customer">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <h2 className="text-2xl font-semibold mb-4">Ready to Start Earning?</h2>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {user ? (
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto group"
+                    onClick={() => {
+                      CustomerCampaigns.join(user.email, campaign.id);
+                      window.location.reload();
+                    }}
+                  >
+                    Join Campaign
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                ) : (
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto group"
+                    onClick={() => setShowRegistration(true)}
+                  >
+                    Join Campaign
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                )}
+                <Link to="/login">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    Already a Member? Log In
+                  </Button>
+                </Link>
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-6">
+                By joining, you agree to our terms of service and privacy policy
+              </p>
+            </>
+          )}
         </div>
       </main>
+
+      {campaign && (
+        <CampaignRegistrationModal
+          open={showRegistration}
+          onOpenChange={setShowRegistration}
+          campaign={campaign}
+        />
+      )}
     </div>
   );
 }
