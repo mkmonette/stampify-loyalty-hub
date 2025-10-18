@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { Campaigns, Campaign, CustomerCampaigns, Rewards, Cards } from "@/utils/localDb";
+import { Campaigns, Campaign, CustomerCampaigns, Rewards, Cards, Businesses, Business } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stamp, Gift, ArrowRight, CheckCircle2, Mail, Phone, Globe, Facebook, Instagram, Twitter, Download } from "lucide-react";
@@ -14,6 +14,7 @@ import QRCode from "qrcode";
 export default function CampaignPublicPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [branding, setBranding] = useState<BrandingSettings | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -36,9 +37,19 @@ export default function CampaignPublicPage() {
     const found = Campaigns.findBySlug(businessSlug);
     setCampaign(found || null);
     
-    if (found?.ownerId) {
-      const brandingSettings = getBrandingForOwner(found.ownerId);
-      setBranding(brandingSettings);
+    if (found) {
+      // Load business data from localStorage
+      if (found.businessId) {
+        const foundBusiness = Businesses.findById(found.businessId);
+        setBusiness(foundBusiness || null);
+        console.log('📊 Loaded business from localStorage:', foundBusiness);
+      }
+      
+      // Load branding
+      if (found.ownerId) {
+        const brandingSettings = getBrandingForOwner(found.ownerId);
+        setBranding(brandingSettings);
+      }
     }
     
     setLoading(false);
@@ -101,9 +112,26 @@ export default function CampaignPublicPage() {
       </Helmet>
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
+        {/* Business Header */}
+        {business && (
+          <div className="text-center mb-8 pb-8 border-b">
+            {business.logo && (
+              <img 
+                src={business.logo} 
+                alt={`${business.name} logo`} 
+                className="h-20 w-20 mx-auto mb-4 rounded-full object-cover shadow-lg"
+              />
+            )}
+            <h2 className="text-3xl font-bold mb-2">{business.name}</h2>
+            {business.description && (
+              <p className="text-muted-foreground">{business.description}</p>
+            )}
+          </div>
+        )}
+
+        {/* Campaign Header */}
         <div className="text-center mb-12">
-          {branding?.logoDataUrl && (
+          {!business && branding?.logoDataUrl && (
             <div className="inline-flex items-center justify-center mb-6">
               <img 
                 src={branding.logoDataUrl} 

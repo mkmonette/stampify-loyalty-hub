@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
-import { Campaigns, Campaign, CustomerCampaigns, seedIfEmpty } from "@/utils/localDb";
+import { Campaigns, Campaign, CustomerCampaigns, seedIfEmpty, Businesses, Business } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function CampaignsPage() {
   const { user } = useAuth();
   const [items, setItems] = useState<Campaign[]>([]);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [stampsRequired, setStampsRequired] = useState(10);
@@ -21,11 +22,34 @@ export default function CampaignsPage() {
   useEffect(() => {
     seedIfEmpty();
     setItems(Campaigns.list());
-  }, []);
+    
+    // Load or create business for current user
+    if (user) {
+      const businesses = Businesses.list().filter(b => b.ownerId === user.id);
+      if (businesses.length > 0) {
+        setBusiness(businesses[0]);
+      } else {
+        // Create default business for this user
+        const newBusiness = Businesses.add({
+          name: `${user.email}'s Business`,
+          description: 'Your loyalty program business',
+          logo: '/placeholder.svg',
+          template: 'modern',
+          colors: {
+            primary: '#8B4513',
+            background: '#FFF8F0'
+          },
+          ownerId: user.id
+        });
+        setBusiness(newBusiness);
+      }
+    }
+  }, [user]);
 
   const add = () => {
     if (!name.trim()) return;
     Campaigns.add({ 
+      businessId: business?.id,
       name, 
       description: desc, 
       stampsRequired, 
@@ -37,6 +61,7 @@ export default function CampaignsPage() {
     setDesc("");
     setStampsRequired(10);
     setActive(true);
+    toast.success("Campaign created and saved to localStorage!");
   };
 
   const toggleActive = (id: string, value: boolean) => {

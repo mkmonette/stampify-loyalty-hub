@@ -3,15 +3,31 @@
 
 export type ID = string;
 
+export type Business = {
+  id: ID;
+  name: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  template: string;
+  colors: {
+    primary: string;
+    background: string;
+  };
+  ownerId?: ID; // User ID who owns this business
+  createdAt: string;
+};
+
 export type Campaign = {
   id: ID;
+  businessId?: ID; // Link to Business
   name: string;
   slug: string;
   description?: string;
   stampsRequired: number;
   active: boolean;
   createdAt: string;
-  ownerId?: ID; // Business owner ID for branding
+  ownerId?: ID; // Business owner ID for branding (deprecated, use businessId)
   contactEmail?: string;
   contactPhone?: string;
   socialLinks?: {
@@ -71,7 +87,8 @@ export type CustomerCampaign = {
 };
 
 const DB = {
-  campaigns: 'db_campaigns',
+  businesses: 'businesses',
+  campaigns: 'campaigns',
   rewards: 'db_rewards',
   coupons: 'db_coupons',
   cards: 'db_loyalty_cards',
@@ -108,22 +125,64 @@ function generateSlug(name: string): string {
     .replace(/-+/g, '-');
 }
 
+// Businesses
+export const Businesses = {
+  list: (): Business[] => read<Business>(DB.businesses),
+  add: (input: Omit<Business, 'id' | 'createdAt' | 'slug'>): Business => {
+    const slug = generateSlug(input.name);
+    const existing = Businesses.findBySlug(slug);
+    if (existing) {
+      console.warn('⚠️ Business with slug already exists:', slug);
+      return existing;
+    }
+    const next: Business = { id: uid(), slug, createdAt: new Date().toISOString(), ...input };
+    const items = Businesses.list();
+    write(DB.businesses, [next, ...items]);
+    console.log('✅ Business saved:', next);
+    return next;
+  },
+  update: (id: ID, patch: Partial<Business>) => {
+    const items = Businesses.list().map((b) => (b.id === id ? { ...b, ...patch } : b));
+    write(DB.businesses, items);
+    const updated = items.find(b => b.id === id);
+    if (updated) console.log('✅ Business updated:', updated);
+  },
+  remove: (id: ID) => {
+    write(DB.businesses, Businesses.list().filter((b) => b.id !== id));
+    console.log('✅ Business removed:', id);
+  },
+  findBySlug: (slug: string): Business | undefined => Businesses.list().find((b) => b.slug === slug),
+  findById: (id: ID): Business | undefined => Businesses.list().find((b) => b.id === id),
+};
+
 // Campaigns
 export const Campaigns = {
   list: (): Campaign[] => read<Campaign>(DB.campaigns),
   add: (input: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign => {
     const slug = generateSlug(input.name);
+    const existing = Campaigns.findBySlug(slug);
+    if (existing) {
+      console.warn('⚠️ Campaign with slug already exists:', slug);
+      return existing;
+    }
     const next: Campaign = { id: uid(), slug, createdAt: new Date().toISOString(), ...input };
     const items = Campaigns.list();
     write(DB.campaigns, [next, ...items]);
+    console.log('✅ Campaign saved:', next);
     return next;
   },
   update: (id: ID, patch: Partial<Campaign>) => {
     const items = Campaigns.list().map((c) => (c.id === id ? { ...c, ...patch } : c));
     write(DB.campaigns, items);
+    const updated = items.find(c => c.id === id);
+    if (updated) console.log('✅ Campaign updated:', updated);
   },
-  remove: (id: ID) => write(DB.campaigns, Campaigns.list().filter((c) => c.id !== id)),
+  remove: (id: ID) => {
+    write(DB.campaigns, Campaigns.list().filter((c) => c.id !== id));
+    console.log('✅ Campaign removed:', id);
+  },
   findBySlug: (slug: string): Campaign | undefined => Campaigns.list().find((c) => c.slug === slug),
+  byBusiness: (businessId: ID): Campaign[] => Campaigns.list().filter((c) => c.businessId === businessId),
 };
 
 // Rewards
@@ -229,31 +288,58 @@ export const CustomerCampaigns = {
 
 // Seed demo data if empty
 export function seedIfEmpty() {
-  if (Campaigns.list().length === 0) {
-    // Use demo business admin ID for campaigns
-    Campaigns.add({ 
-      name: 'Coffee Lovers', 
-      description: 'Buy 9 get 1 free', 
-      stampsRequired: 10, 
-      active: true,
-      ownerId: 'demo-business-admin',
-      contactEmail: 'coffee@demo.com',
-      socialLinks: {
-        website: 'https://example.com',
-        instagram: 'https://instagram.com/coffeelovers'
-      }
+  // Seed demo business first
+  if (Businesses.list().length === 0) {
+    const demoBusiness = Businesses.add({
+      name: 'Demo Coffee Shop',
+      description: 'Your favorite local coffee spot',
+      logo: '/placeholder.svg',
+      template: 'modern',
+      colors: {
+        primary: '#8B4513',
+        background: '#FFF8F0'
+      },
+      ownerId: 'demo-business-admin'
     });
-    Campaigns.add({ 
-      name: 'Sandwich Club', 
-      description: 'Collect 5 stamps', 
-      stampsRequired: 5, 
-      active: true,
-      ownerId: 'demo-business-admin',
-      contactEmail: 'sandwich@demo.com'
-    });
+
+    // Seed campaigns linked to business
+    if (Campaigns.list().length === 0) {
+      Campaigns.add({ 
+        businessId: demoBusiness.id,
+        name: 'Coffee Lovers', 
+        description: 'Buy 9 get 1 free', 
+        stampsRequired: 10, 
+        active: true,
+        ownerId: 'demo-business-admin',
+        contactEmail: 'coffee@demo.com',
+        socialLinks: {
+          website: 'https://example.com',
+          instagram: 'https://instagram.com/coffeelovers'
+        }
+      });
+      Campaigns.add({ 
+        businessId: demoBusiness.id,
+        name: 'Sandwich Club', 
+        description: 'Collect 5 stamps', 
+        stampsRequired: 5, 
+        active: true,
+        ownerId: 'demo-business-admin',
+        contactEmail: 'sandwich@demo.com'
+      });
+    }
   }
+  
   if (Rewards.list().length === 0) {
     Rewards.add({ name: 'Free Coffee', description: 'Redeem with 10 stamps', stampsRequired: 10, active: true });
     Rewards.add({ name: 'Free Muffin', description: '5 stamps', stampsRequired: 5, active: true });
   }
+}
+
+// Helper functions for easy access
+export function saveBusiness(business: Omit<Business, 'id' | 'createdAt' | 'slug'>): Business {
+  return Businesses.add(business);
+}
+
+export function saveCampaign(campaign: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign {
+  return Campaigns.add(campaign);
 }
