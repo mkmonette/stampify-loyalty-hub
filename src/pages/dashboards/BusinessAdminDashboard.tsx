@@ -12,8 +12,20 @@ import {
   Stamp,
   Settings
 } from "lucide-react";
+import { useCampaigns } from "@/context/CampaignContext";
+import { useAuth } from "@/context/AuthContext";
+import { CustomerCampaigns, Cards } from "@/utils/localDb";
 
 export const BusinessAdminDashboard = () => {
+  const { campaigns } = useCampaigns();
+  const { user } = useAuth();
+  
+  // Calculate real stats from campaigns
+  const userCampaigns = campaigns.filter(c => c.ownerId === user?.id);
+  const totalCustomers = userCampaigns.reduce((sum, c) => sum + CustomerCampaigns.countByCampaign(c.id), 0);
+  const totalStamps = Cards.list().reduce((sum, card) => sum + card.stamps, 0);
+  const activeCampaignsCount = userCampaigns.filter(c => c.active).length;
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -50,9 +62,9 @@ export const BusinessAdminDashboard = () => {
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">2,847</div>
+              <div className="text-2xl font-bold text-foreground">{totalCustomers}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-accent">+23%</span> from last month
+                Across {activeCampaignsCount} active campaign{activeCampaignsCount !== 1 ? 's' : ''}
               </p>
             </CardContent>
           </Card>
@@ -65,9 +77,9 @@ export const BusinessAdminDashboard = () => {
               <Stamp className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">18,329</div>
+              <div className="text-2xl font-bold text-foreground">{totalStamps}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-accent">+18%</span> this week
+                Total stamps collected
               </p>
             </CardContent>
           </Card>
@@ -138,16 +150,19 @@ export const BusinessAdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="p-3 bg-gradient-feature rounded-lg">
-                    <h4 className="font-medium text-foreground">Coffee Loyalty</h4>
-                    <p className="text-sm text-muted-foreground">Buy 10, get 1 free</p>
-                    <Badge className="mt-2 bg-accent text-accent-foreground text-xs">1,847 members</Badge>
-                  </div>
-                  <div className="p-3 bg-gradient-feature rounded-lg">
-                    <h4 className="font-medium text-foreground">VIP Program</h4>
-                    <p className="text-sm text-muted-foreground">Premium rewards</p>
-                    <Badge className="mt-2 bg-secondary text-secondary-foreground text-xs">234 members</Badge>
-                  </div>
+                  {userCampaigns.length > 0 ? (
+                    userCampaigns.slice(0, 3).map((campaign) => (
+                      <div key={campaign.id} className="p-3 bg-gradient-feature rounded-lg">
+                        <h4 className="font-medium text-foreground">{campaign.name}</h4>
+                        <p className="text-sm text-muted-foreground">{campaign.description || `Collect ${campaign.stampsRequired} stamps`}</p>
+                        <Badge className="mt-2 bg-accent text-accent-foreground text-xs">
+                          {CustomerCampaigns.countByCampaign(campaign.id)} members
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No active campaigns yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

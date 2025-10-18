@@ -1,20 +1,20 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
-import { Cards, Campaigns, LoyaltyCard } from "@/utils/localDb";
+import { Cards, LoyaltyCard } from "@/utils/localDb";
 import { useAuth } from "@/context/AuthContext";
+import { useCampaigns } from "@/context/CampaignContext";
 import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function CustomerLoyaltyCardsPage() {
   const { user } = useAuth();
+  const { campaigns } = useCampaigns();
   const [cards, setCards] = useState<LoyaltyCard[]>([]);
 
   useEffect(() => {
     if (!user) return;
     setCards(Cards.byUser(user.id));
   }, [user]);
-
-  const campaigns = Campaigns.list();
 
   const createCard = (campaignId: string) => {
     if (!user) return;

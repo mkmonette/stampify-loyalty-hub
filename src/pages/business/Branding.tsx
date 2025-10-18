@@ -1,8 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
 import { getBrandingForOwner, setBrandingForOwner, BrandingSettings } from "@/utils/templates";
-import { Campaigns } from "@/utils/localDb";
 import { useAuth } from "@/context/AuthContext";
+import { useCampaigns } from "@/context/CampaignContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import { Palette, Grid, Layout, Volume2, Sparkles, Settings, ChevronDown, Chevro
 
 export default function BrandingPage() {
   const { user } = useAuth();
+  const { campaigns: allCampaigns } = useCampaigns();
   const ownerId = user?.id ?? "anon";
   const [saved, setSaved] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
   const [preview, setPreview] = useState<BrandingSettings>({ id: ownerId, ownerUserId: ownerId, templateId: "grid", updatedAt: new Date().toISOString() });
@@ -27,8 +28,8 @@ export default function BrandingPage() {
     const current = getBrandingForOwner(ownerId);
     setSaved(current);
     setPreview(current);
-    setCampaigns(Campaigns.list().map(c => ({ id: c.id, name: c.name })));
-  }, [ownerId]);
+    setCampaigns(allCampaigns.map(c => ({ id: c.id, name: c.name })));
+  }, [ownerId, allCampaigns]);
 
   const onSave = () => {
     const next = setBrandingForOwner(ownerId, preview);

@@ -1,11 +1,13 @@
 import { Helmet } from "react-helmet-async";
 import { useCallback, useMemo, useState } from "react";
 import QRScanner from "@/components/qr/QRScanner";
-import { Cards, Campaigns, Redemptions, Rewards } from "@/utils/localDb";
+import { Cards, Redemptions, Rewards } from "@/utils/localDb";
 import { useAuth } from "@/context/AuthContext";
+import { useCampaigns } from "@/context/CampaignContext";
 
 export default function CustomerScanPage() {
   const { user } = useAuth();
+  const { campaigns } = useCampaigns();
   const [last, setLast] = useState<string>("");
 
   const onDecode = useCallback((text: string) => {
@@ -14,7 +16,7 @@ export default function CustomerScanPage() {
     // Very simple demo parser: "stamp:<campaignName>" or "reward:<rewardName>"
     if (text.startsWith('stamp:')) {
       const name = text.split(':')[1];
-      const campaign = Campaigns.list().find((c) => c.name.toLowerCase() === name?.toLowerCase());
+      const campaign = campaigns.find((c) => c.name.toLowerCase() === name?.toLowerCase());
       if (campaign) {
         const card = Cards.getOrCreate(user.id, campaign.id);
         Cards.addStamp(card.id, 1);
@@ -28,7 +30,7 @@ export default function CustomerScanPage() {
         alert(`Redeemed: ${reward.name}`);
       }
     }
-  }, [user]);
+  }, [user, campaigns]);
 
   const title = useMemo(() => `Scan QR | Stampify`, []);
 

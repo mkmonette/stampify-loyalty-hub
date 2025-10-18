@@ -9,6 +9,7 @@ import { SuperAdminDashboard } from "./pages/dashboards/SuperAdminDashboard";
 import { BusinessAdminDashboard } from "./pages/dashboards/BusinessAdminDashboard";
 import { CustomerDashboard } from "./pages/dashboards/CustomerDashboard";
 import { AuthProvider } from "./context/AuthContext";
+import { CampaignProvider } from "./context/CampaignContext";
 import { RequireAuth } from "./routes/RequireAuth";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -38,8 +39,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
+          <CampaignProvider>
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -105,8 +107,9 @@ const App = () => (
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
+          </CampaignProvider>
         </AuthProvider>
       </TooltipProvider>
     </HelmetProvider>

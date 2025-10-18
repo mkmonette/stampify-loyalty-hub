@@ -9,10 +9,11 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Copy, ExternalLink, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useCampaigns } from "@/context/CampaignContext";
 
 export default function CampaignsPage() {
   const { user } = useAuth();
-  const [items, setItems] = useState<Campaign[]>([]);
+  const { campaigns, refreshCampaigns } = useCampaigns();
   const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -21,7 +22,7 @@ export default function CampaignsPage() {
 
   useEffect(() => {
     seedIfEmpty();
-    setItems(Campaigns.list());
+    refreshCampaigns();
     
     // Load or create business for current user
     if (user) {
@@ -56,7 +57,7 @@ export default function CampaignsPage() {
       active,
       ownerId: user?.id // Set the current user as the owner
     });
-    setItems(Campaigns.list());
+    refreshCampaigns();
     setName("");
     setDesc("");
     setStampsRequired(10);
@@ -66,7 +67,7 @@ export default function CampaignsPage() {
 
   const toggleActive = (id: string, value: boolean) => {
     Campaigns.update(id, { active: value });
-    setItems(Campaigns.list());
+    refreshCampaigns();
   };
 
   const title = useMemo(() => `Campaigns | Stampify`, []);
@@ -129,7 +130,7 @@ export default function CampaignsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((c) => (
+                {campaigns.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.stampsRequired} stamps</TableCell>
@@ -166,7 +167,7 @@ export default function CampaignsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); setItems(Campaigns.list()); }}>Delete</Button>
+                      <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
                     </TableCell>
                   </TableRow>
                 ))}

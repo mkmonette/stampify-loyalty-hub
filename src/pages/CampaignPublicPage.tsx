@@ -1,11 +1,12 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { Campaigns, Campaign, CustomerCampaigns, Rewards, Cards, Businesses, Business } from "@/utils/localDb";
+import { Campaign, CustomerCampaigns, Rewards, Cards, Businesses, Business } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stamp, Gift, ArrowRight, CheckCircle2, Mail, Phone, Globe, Facebook, Instagram, Twitter, Download } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useCampaigns } from "@/context/CampaignContext";
 import { CampaignRegistrationModal } from "@/components/modals/CampaignRegistrationModal";
 import { getBrandingForOwner, BrandingSettings } from "@/utils/templates";
 import ThemedCampaignCard from "@/components/campaign/ThemedCampaignCard";
@@ -13,6 +14,7 @@ import QRCode from "qrcode";
 
 export default function CampaignPublicPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>();
+  const { campaigns } = useCampaigns();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [business, setBusiness] = useState<Business | null>(null);
   const [branding, setBranding] = useState<BrandingSettings | null>(null);
@@ -34,7 +36,7 @@ export default function CampaignPublicPage() {
       return;
     }
     
-    const found = Campaigns.findBySlug(businessSlug);
+    const found = campaigns.find(c => c.slug === businessSlug);
     setCampaign(found || null);
     
     if (found) {
@@ -53,7 +55,7 @@ export default function CampaignPublicPage() {
     }
     
     setLoading(false);
-  }, [businessSlug]);
+  }, [businessSlug, campaigns]);
 
   // Generate QR code
   useEffect(() => {

@@ -1,19 +1,21 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
-import { Campaigns, Cards, Redemptions, Rewards } from "@/utils/localDb";
+import { Rewards, Cards, Redemptions } from "@/utils/localDb";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCampaigns } from "@/context/CampaignContext";
 
 export default function BusinessAnalyticsPage() {
+  const { campaigns } = useCampaigns();
   const [metrics, setMetrics] = useState({ campaigns: 0, rewards: 0, cards: 0, redemptions: 0 });
 
   useEffect(() => {
     setMetrics({
-      campaigns: Campaigns.list().length,
+      campaigns: campaigns.length,
       rewards: Rewards.list().length,
       cards: Cards.list().length,
       redemptions: Redemptions.list().length,
     });
-  }, []);
+  }, [campaigns]);
 
   const title = useMemo(() => `Analytics | Stampify`, []);
 
