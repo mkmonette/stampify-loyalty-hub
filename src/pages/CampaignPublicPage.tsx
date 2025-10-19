@@ -13,7 +13,7 @@ import ThemedCampaignCard from "@/components/campaign/ThemedCampaignCard";
 import QRCode from "qrcode";
 
 export default function CampaignPublicPage() {
-  const { businessSlug } = useParams<{ businessSlug: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { campaigns } = useCampaigns();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -31,12 +31,20 @@ export default function CampaignPublicPage() {
   const campaignRewards = campaign ? Rewards.list().filter(r => r.active) : [];
 
   useEffect(() => {
-    if (!businessSlug) {
+    console.log('🔍 CampaignPublicPage mounted');
+    console.log('🎯 Looking for campaign slug:', slug);
+    console.log('📊 Available campaigns:', campaigns);
+    console.log('📦 Raw localStorage campaigns:', localStorage.getItem('campaigns'));
+    console.log('📦 Raw localStorage businesses:', localStorage.getItem('businesses'));
+    
+    if (!slug) {
+      console.warn('⚠️ No slug provided');
       setLoading(false);
       return;
     }
     
-    const found = campaigns.find(c => c.slug === businessSlug);
+    const found = campaigns.find(c => c.slug === slug);
+    console.log('🔎 Found campaign:', found);
     setCampaign(found || null);
     
     if (found) {
@@ -44,18 +52,21 @@ export default function CampaignPublicPage() {
       if (found.businessId) {
         const foundBusiness = Businesses.findById(found.businessId);
         setBusiness(foundBusiness || null);
-        console.log('📊 Loaded business from localStorage:', foundBusiness);
+        console.log('🏢 Loaded business from localStorage:', foundBusiness);
       }
       
       // Load branding
       if (found.ownerId) {
         const brandingSettings = getBrandingForOwner(found.ownerId);
         setBranding(brandingSettings);
+        console.log('🎨 Loaded branding:', brandingSettings);
       }
+    } else {
+      console.warn('⚠️ Campaign not found for slug:', slug);
     }
     
     setLoading(false);
-  }, [businessSlug, campaigns]);
+  }, [slug, campaigns]);
 
   // Generate QR code
   useEffect(() => {

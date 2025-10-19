@@ -22,12 +22,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     const data = Campaigns.list();
     setCampaigns(data);
     console.log('📢 Campaigns synced:', data);
+    console.log('📦 Raw localStorage campaigns:', localStorage.getItem('campaigns'));
   };
 
   const refreshBusinesses = () => {
     const data = Businesses.list();
     setBusinesses(data);
     console.log('📢 Businesses synced:', data);
+    console.log('📦 Raw localStorage businesses:', localStorage.getItem('businesses'));
   };
 
   const addOrUpdateCampaign = (campaign: Campaign) => {

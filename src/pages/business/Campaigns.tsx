@@ -26,14 +26,25 @@ export default function CampaignsPage() {
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
+    console.log('🔍 Campaigns page mounted');
+    console.log('📦 Current localStorage campaigns:', localStorage.getItem('campaigns'));
+    console.log('📦 Current localStorage businesses:', localStorage.getItem('businesses'));
+    
     seedIfEmpty();
     refreshCampaigns();
     
+    console.log('📊 After seed - Campaigns from context:', campaigns);
+    console.log('📊 After seed - localStorage campaigns:', localStorage.getItem('campaigns'));
+    
     // Load or create business for current user
     if (user) {
+      console.log('👤 Current user:', user);
       const businesses = Businesses.list().filter(b => b.ownerId === user.id);
+      console.log('🏢 Businesses for user:', businesses);
+      
       if (businesses.length > 0) {
         setBusiness(businesses[0]);
+        console.log('✅ Using existing business:', businesses[0]);
       } else {
         // Create default business for this user
         const newBusiness = Businesses.add({
@@ -48,20 +59,28 @@ export default function CampaignsPage() {
           ownerId: user.id
         });
         setBusiness(newBusiness);
+        console.log('✅ Created new business:', newBusiness);
       }
     }
   }, [user]);
 
   const add = () => {
     if (!name.trim()) return;
-    Campaigns.add({ 
+    
+    console.log('➕ Adding new campaign:', { name, desc, stampsRequired, active, businessId: business?.id, ownerId: user?.id });
+    
+    const newCampaign = Campaigns.add({ 
       businessId: business?.id,
       name, 
       description: desc, 
       stampsRequired, 
       active,
-      ownerId: user?.id // Set the current user as the owner
+      ownerId: user?.id
     });
+    
+    console.log('✅ Campaign added:', newCampaign);
+    console.log('📦 LocalStorage after add:', localStorage.getItem('campaigns'));
+    
     refreshCampaigns();
     setName("");
     setDesc("");
