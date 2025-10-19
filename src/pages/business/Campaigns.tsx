@@ -99,28 +99,8 @@ export default function CampaignsPage() {
         <link rel="canonical" href={`${window.location.origin}${window.location.pathname}`} />
       </Helmet>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Campaign</CardTitle>
-            <CardDescription>Define a new loyalty campaign</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
-            <div className="flex items-center gap-2">
-              <Input type="number" min={1} value={stampsRequired} onChange={(e) => setStampsRequired(parseInt(e.target.value || '1'))} />
-              <span className="text-sm text-muted-foreground">Stamps Required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={active} onCheckedChange={setActive} />
-              <span className="text-sm">Active</span>
-            </div>
-            <Button onClick={add}>Add Campaign</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
+      <div className="grid gap-6">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Existing Campaigns</CardTitle>
             <CardDescription>Enable/disable or review campaigns</CardDescription>
@@ -222,6 +202,29 @@ export default function CampaignsPage() {
               </Table>
             </TooltipProvider>
           </CardContent>
+        </Card>
+        
+        <Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Campaign</CardTitle>
+            <CardDescription>Define a new loyalty campaign</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <Input type="number" min={1} value={stampsRequired} onChange={(e) => setStampsRequired(parseInt(e.target.value || '1'))} />
+              <span className="text-sm text-muted-foreground">Stamps Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={active} onCheckedChange={setActive} />
+              <span className="text-sm">Active</span>
+            </div>
+            <Button onClick={add}>Add Campaign</Button>
+          </CardContent>
+        </Card>
+
         </Card>
       </div>
 
