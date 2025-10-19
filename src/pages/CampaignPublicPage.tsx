@@ -21,6 +21,7 @@ export default function CampaignPublicPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [showRegistration, setShowRegistration] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -30,7 +31,19 @@ export default function CampaignPublicPage() {
     : 0;
   const campaignRewards = campaign ? Rewards.list().filter(r => r.active) : [];
 
+  // Wait for initial campaigns load
   useEffect(() => {
+    if (campaigns.length > 0 || localStorage.getItem('campaigns') === '[]') {
+      setInitialLoadComplete(true);
+    }
+  }, [campaigns]);
+
+  useEffect(() => {
+    if (!initialLoadComplete) {
+      console.log('⏳ Waiting for campaigns to load...');
+      return;
+    }
+
     console.log('🔍 CampaignPublicPage mounted');
     console.log('🎯 Looking for campaign slug:', slug);
     console.log('📊 Available campaigns:', campaigns);
@@ -66,7 +79,7 @@ export default function CampaignPublicPage() {
     }
     
     setLoading(false);
-  }, [slug, campaigns]);
+  }, [slug, campaigns, initialLoadComplete]);
 
   // Generate QR code
   useEffect(() => {
