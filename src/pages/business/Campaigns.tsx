@@ -6,10 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Users } from "lucide-react";
+import { Copy, ExternalLink, Users, Eye } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCampaigns } from "@/context/CampaignContext";
+import ThemedCampaignCard from "@/components/campaign/ThemedCampaignCard";
 
 export default function CampaignsPage() {
   const { user } = useAuth();
@@ -19,6 +23,7 @@ export default function CampaignsPage() {
   const [desc, setDesc] = useState("");
   const [stampsRequired, setStampsRequired] = useState(10);
   const [active, setActive] = useState(true);
+  const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
     seedIfEmpty();
@@ -78,7 +83,11 @@ export default function CampaignsPage() {
     toast.success("Campaign link copied to clipboard!");
   };
 
-  const previewCampaign = (slug: string) => {
+  const openPreview = (campaign: Campaign) => {
+    setPreviewCampaign(campaign);
+  };
+
+  const openInNewTab = (slug: string) => {
     window.open(`/campaigns/${slug}`, '_blank');
   };
 
@@ -117,65 +126,173 @@ export default function CampaignsPage() {
             <CardDescription>Enable/disable or review campaigns</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableCaption>Campaigns and progress</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Goal</TableHead>
-                  <TableHead>Customers</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Link</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaigns.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.stampsRequired} stamps</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>{CustomerCampaigns.countByCampaign(c.id)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch checked={c.active} onCheckedChange={(v) => toggleActive(c.id, v)} />
-                        <span className="text-xs text-muted-foreground">{c.active ? 'Active' : 'Inactive'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => copyLink(c.slug)}
-                          title="Copy link"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => previewCampaign(c.slug)}
-                          title="Preview"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
-                    </TableCell>
+            <TooltipProvider>
+              <Table>
+                <TableCaption>Campaigns and progress</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Goal</TableHead>
+                    <TableHead>Customers</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right">Manage</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {campaigns.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-muted px-2 py-1 rounded">/campaigns/{c.slug}</code>
+                      </TableCell>
+                      <TableCell>{c.stampsRequired} stamps</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>{CustomerCampaigns.countByCampaign(c.id)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={c.active} onCheckedChange={(v) => toggleActive(c.id, v)} />
+                          <Badge variant={c.active ? "default" : "secondary"}>
+                            {c.active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => openPreview(c)}
+                                title="Live Preview"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Live Preview</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => openInNewTab(c.slug)}
+                                title="Open in new tab"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Open in new tab</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => copyLink(c.slug)}
+                                title="Copy link"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Copy public campaign link</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TooltipProvider>
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Preview Modal */}
+      <Dialog open={!!previewCampaign} onOpenChange={(open) => !open && setPreviewCampaign(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Campaign Preview</DialogTitle>
+            <DialogDescription>
+              This is how customers will see your campaign page at{" "}
+              <code className="text-xs bg-muted px-2 py-1 rounded">
+                /campaigns/{previewCampaign?.slug}
+              </code>
+            </DialogDescription>
+          </DialogHeader>
+          
+          {previewCampaign && business && (
+            <div className="mt-4 border rounded-lg p-6 bg-muted/50">
+              <ThemedCampaignCard
+                campaign={previewCampaign}
+                branding={{
+                  id: business.id,
+                  ownerUserId: business.ownerId,
+                  templateId: 'grid',
+                  logoDataUrl: business.logo,
+                  paletteName: '',
+                  colors: {
+                    primary: business.colors.primary,
+                    secondary: business.colors.background,
+                    accent: business.colors.primary
+                  },
+                  templateStyle: business.template as any,
+                  stampShape: 'rounded-square',
+                  layout: 'vertical',
+                  backgroundDataUrl: '',
+                  updatedAt: new Date().toISOString()
+                }}
+                earnedStamps={0}
+                isReadOnly={true}
+              />
+              
+              <div className="mt-6 flex items-center justify-between p-4 bg-background rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">Public Campaign Link</p>
+                  <code className="text-xs text-muted-foreground">
+                    {window.location.origin}/campaigns/{previewCampaign.slug}
+                  </code>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => copyLink(previewCampaign.slug)}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => openInNewTab(previewCampaign.slug)}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open in New Tab
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
