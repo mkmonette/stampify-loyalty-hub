@@ -40,6 +40,7 @@ export type Campaign = {
 
 export type Reward = {
   id: ID;
+  campaignId?: ID; // Link to Campaign
   name: string;
   description?: string;
   stampsRequired: number; // required stamps to redeem
@@ -52,6 +53,16 @@ export type Coupon = {
   code: string;
   discount: number; // percent 0-100
   expiresAt?: string; // ISO
+  active: boolean;
+  createdAt: string;
+};
+
+export type QRCodeData = {
+  id: ID;
+  campaignId?: ID; // Link to Campaign
+  code: string; // The QR code payload (e.g., "stamp:campaign:coffee")
+  dataUrl: string; // The generated QR code image data URL
+  purpose?: string; // Description of what this QR code does
   active: boolean;
   createdAt: string;
 };
@@ -95,6 +106,7 @@ const DB = {
   redemptions: 'db_redemptions',
   referrals: 'db_referrals',
   customerCampaigns: 'db_customer_campaigns',
+  qrcodes: 'db_qrcodes',
 } as const;
 
 type Key = typeof DB[keyof typeof DB];
@@ -257,6 +269,23 @@ export const Coupons = {
     write(DB.coupons, items);
   },
   remove: (id: ID) => write(DB.coupons, Coupons.list().filter((c) => c.id !== id)),
+};
+
+// QR Codes
+export const QRCodes = {
+  list: (): QRCodeData[] => read<QRCodeData>(DB.qrcodes),
+  byCampaign: (campaignId: ID): QRCodeData[] => QRCodes.list().filter((q) => q.campaignId === campaignId),
+  add: (input: Omit<QRCodeData, 'id' | 'createdAt'>): QRCodeData => {
+    const next: QRCodeData = { id: uid(), createdAt: new Date().toISOString(), ...input };
+    const items = QRCodes.list();
+    write(DB.qrcodes, [next, ...items]);
+    return next;
+  },
+  update: (id: ID, patch: Partial<QRCodeData>) => {
+    const items = QRCodes.list().map((q) => (q.id === id ? { ...q, ...patch } : q));
+    write(DB.qrcodes, items);
+  },
+  remove: (id: ID) => write(DB.qrcodes, QRCodes.list().filter((q) => q.id !== id)),
 };
 
 // Loyalty Cards

@@ -1,18 +1,23 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
 import { Reward, Rewards, seedIfEmpty } from "@/utils/localDb";
+import { useCampaigns } from "@/context/CampaignContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export default function BusinessRewardsPage() {
+  const { campaigns } = useCampaigns();
   const [items, setItems] = useState<Reward[]>([]);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [stampsRequired, setStampsRequired] = useState(5);
   const [active, setActive] = useState(true);
+  const [campaignId, setCampaignId] = useState<string>("");
 
   useEffect(() => {
     seedIfEmpty();
@@ -21,12 +26,19 @@ export default function BusinessRewardsPage() {
 
   const add = () => {
     if (!name.trim()) return;
-    Rewards.add({ name, description: desc, stampsRequired, active });
+    Rewards.add({ 
+      name, 
+      description: desc, 
+      stampsRequired, 
+      active,
+      campaignId: campaignId || undefined
+    });
     setItems(Rewards.list());
     setName("");
     setDesc("");
     setStampsRequired(5);
     setActive(true);
+    setCampaignId("");
   };
 
   const toggleActive = (id: string, value: boolean) => {
@@ -57,6 +69,22 @@ export default function BusinessRewardsPage() {
               <Input type="number" min={1} value={stampsRequired} onChange={(e) => setStampsRequired(parseInt(e.target.value || '1'))} />
               <span className="text-sm text-muted-foreground">Stamps Required</span>
             </div>
+            <div className="space-y-2">
+              <Label>Link to Campaign (Optional)</Label>
+              <Select value={campaignId} onValueChange={setCampaignId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a campaign..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No campaign</SelectItem>
+                  {campaigns.map(campaign => (
+                    <SelectItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center gap-2">
               <Switch checked={active} onCheckedChange={setActive} />
               <span className="text-sm">Active</span>
@@ -76,27 +104,34 @@ export default function BusinessRewardsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Campaign</TableHead>
                   <TableHead>Requirement</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell>{r.stampsRequired} stamps</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch checked={r.active} onCheckedChange={(v) => toggleActive(r.id, v)} />
-                        <span className="text-xs text-muted-foreground">{r.active ? 'Active' : 'Inactive'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => { Rewards.remove(r.id); setItems(Rewards.list()); }}>Delete</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {items.map((r) => {
+                  const linkedCampaign = campaigns.find(c => c.id === r.campaignId);
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">{r.name}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {linkedCampaign ? linkedCampaign.name : 'None'}
+                      </TableCell>
+                      <TableCell>{r.stampsRequired} stamps</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={r.active} onCheckedChange={(v) => toggleActive(r.id, v)} />
+                          <span className="text-xs text-muted-foreground">{r.active ? 'Active' : 'Inactive'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => { Rewards.remove(r.id); setItems(Rewards.list()); }}>Delete</Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>

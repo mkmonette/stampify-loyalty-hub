@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getBrandingForOwner, setBrandingForOwner, BrandingSettings } from "@/utils/templates";
 import { useAuth } from "@/context/AuthContext";
 import { useCampaigns } from "@/context/CampaignContext";
+import { Rewards, QRCodes } from "@/utils/localDb";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -76,18 +77,19 @@ export default function BrandingPage() {
             </div>
             
             <div className="flex justify-center mb-6">
-              <TemplateLivePreview 
-                id="grid"
-                colors={effectiveColors()} 
-                logoDataUrl={preview.logoDataUrl} 
-                backgroundDataUrl={preview.backgroundDataUrl} 
-                animationStyle={preview.animationStyle as any} 
-                layout={preview.layout as any} 
-                templateStyle={preview.templateStyle as any}
-                gridSize={preview.gridSize}
-                stampShape={preview.stampShape}
-                cornerRadius={preview.cornerRadius}
-              />
+               <TemplateLivePreview 
+                  id="grid"
+                  colors={effectiveColors()} 
+                  logoDataUrl={preview.logoDataUrl} 
+                  backgroundDataUrl={preview.backgroundDataUrl} 
+                  animationStyle={preview.animationStyle as any} 
+                  layout={preview.layout as any} 
+                  templateStyle={preview.templateStyle as any}
+                  gridSize={preview.gridSize}
+                  stampShape={preview.stampShape}
+                  cornerRadius={preview.cornerRadius}
+                  linkedCampaignId={preview.linkedCampaignId}
+                />
             </div>
 
             {hasChanges && (
@@ -310,9 +312,9 @@ export default function BrandingPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Link to Campaign</CardTitle>
-                  <CardDescription>Connect this template to a specific loyalty campaign</CardDescription>
+                  <CardDescription>Connect this template to a specific loyalty campaign and view linked content</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label>Select Campaign</Label>
                     <Select value={preview.linkedCampaignId ?? "none"} onValueChange={(value) => setPreview(p => ({ ...p, linkedCampaignId: value === "none" ? undefined : value }))}>
@@ -329,6 +331,49 @@ export default function BrandingPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {preview.linkedCampaignId && preview.linkedCampaignId !== "none" && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Linked Rewards</Label>
+                        <div className="text-sm text-muted-foreground">
+                          {(() => {
+                            const linkedRewards = Rewards.list().filter(r => r.campaignId === preview.linkedCampaignId && r.active);
+                            return linkedRewards.length > 0 ? (
+                              <ul className="list-disc list-inside space-y-1">
+                                {linkedRewards.map(r => (
+                                  <li key={r.id}>{r.name} - {r.stampsRequired} stamps</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="italic">No rewards linked to this campaign yet.</p>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Linked QR Codes</Label>
+                        <div className="text-sm text-muted-foreground">
+                          {(() => {
+                            const linkedQR = QRCodes.list().filter(q => q.campaignId === preview.linkedCampaignId && q.active);
+                            return linkedQR.length > 0 ? (
+                              <div className="space-y-2">
+                                {linkedQR.map(q => (
+                                  <div key={q.id} className="flex items-center gap-2">
+                                    <img src={q.dataUrl} alt="QR" className="h-12 w-12 border rounded" />
+                                    <span className="text-xs">{q.purpose || q.code.substring(0, 20)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="italic">No QR codes linked to this campaign yet.</p>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -354,6 +399,7 @@ export default function BrandingPage() {
                   gridSize={preview.gridSize}
                   stampShape={preview.stampShape}
                   cornerRadius={preview.cornerRadius}
+                  linkedCampaignId={preview.linkedCampaignId}
                 />
               </div>
 

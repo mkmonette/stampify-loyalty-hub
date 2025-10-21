@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { Campaign, CustomerCampaigns, Rewards, Cards, Businesses, Business } from "@/utils/localDb";
+import { Campaign, CustomerCampaigns, Rewards, Cards, Businesses, Business, QRCodes } from "@/utils/localDb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stamp, Gift, ArrowRight, CheckCircle2, Mail, Phone, Globe, Facebook, Instagram, Twitter, Download } from "lucide-react";
@@ -29,7 +29,8 @@ export default function CampaignPublicPage() {
   const userStamps = user && campaign && hasJoined 
     ? Cards.byUser(user.email).find(c => c.campaignId === campaign.id)?.stamps || 0
     : 0;
-  const campaignRewards = campaign ? Rewards.list().filter(r => r.active) : [];
+  const campaignRewards = campaign ? Rewards.list().filter(r => r.campaignId === campaign.id && r.active) : [];
+  const campaignQRCodes = campaign ? QRCodes.list().filter(q => q.campaignId === campaign.id && q.active) : [];
 
   // Wait for initial campaigns load
   useEffect(() => {
@@ -294,6 +295,26 @@ export default function CampaignPublicPage() {
                     {reward.description && (
                       <p className="text-sm text-muted-foreground">{reward.description}</p>
                     )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Campaign QR Codes */}
+        {campaignQRCodes.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Scan to Earn Stamps</CardTitle>
+              <CardDescription>Use these QR codes at checkout</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-6 justify-center">
+                {campaignQRCodes.map((qr) => (
+                  <div key={qr.id} className="flex flex-col items-center gap-2">
+                    <img src={qr.dataUrl} alt="Campaign QR Code" className="h-32 w-32 border rounded-lg shadow-sm" />
+                    {qr.purpose && <p className="text-xs text-muted-foreground text-center">{qr.purpose}</p>}
                   </div>
                 ))}
               </div>

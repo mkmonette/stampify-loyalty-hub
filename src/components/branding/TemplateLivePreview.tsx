@@ -1,5 +1,6 @@
 import { TemplateId } from "@/utils/templates";
 import { Colors } from "@/utils/palettes";
+import { Rewards, QRCodes } from "@/utils/localDb";
 
 type Props = {
   id: TemplateId;
@@ -12,6 +13,7 @@ type Props = {
   gridSize?: { rows: number; cols: number };
   stampShape?: "square" | "circle" | "rounded-square";
   cornerRadius?: "none" | "small" | "medium" | "large";
+  linkedCampaignId?: string;
 };
 
 export default function TemplateLivePreview({ 
@@ -24,7 +26,8 @@ export default function TemplateLivePreview({
   templateStyle = "modern",
   gridSize,
   stampShape,
-  cornerRadius
+  cornerRadius,
+  linkedCampaignId
 }: Props) {
   const primary = colors?.primary ?? "#3B82F6";
   const secondary = colors?.secondary ?? "#10B981";
@@ -34,6 +37,11 @@ export default function TemplateLivePreview({
   const totalStamps = rows * cols;
   const earnedStamps = 3;
   const progressPercentage = (earnedStamps / totalStamps) * 100;
+
+  // Get linked rewards and QR codes
+  const linkedRewards = linkedCampaignId ? Rewards.list().filter(r => r.campaignId === linkedCampaignId && r.active) : [];
+  const linkedQRCodes = linkedCampaignId ? QRCodes.list().filter(q => q.campaignId === linkedCampaignId && q.active) : [];
+  const primaryQRCode = linkedQRCodes[0];
 
   // Classic template - elegant, traditional design
   if (templateStyle === "classic") {
@@ -459,7 +467,7 @@ export default function TemplateLivePreview({
           ))}
         </div>
         <div className="text-center text-gray-600 font-medium">{earnedStamps} of {totalStamps} stamps</div>
-        <Actions primary={primary} />
+        <Actions primary={primary} linkedRewards={linkedRewards} primaryQRCode={primaryQRCode} />
       </div>
     </div>
   );
@@ -477,20 +485,28 @@ function Header({ title, subtitle, primary, Right }: { title: string; subtitle: 
   );
 }
 
-function Actions({ primary }: { primary: string }) {
+function Actions({ primary, linkedRewards, primaryQRCode }: { primary: string; linkedRewards: any[]; primaryQRCode: any }) {
   return (
-    <div className="flex gap-3">
-      <button 
-        className="flex-1 rounded-xl px-4 py-3 text-white font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        ★
-      </button>
-      <button 
-        className="flex-1 rounded-xl px-4 py-3 text-white font-medium transition-colors"
-        style={{ backgroundColor: primary }}
-      >
-        ⚡
-      </button>
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <button 
+          className="flex-1 rounded-xl px-4 py-3 text-gray-700 font-medium border border-gray-300 bg-white hover:bg-gray-50 transition-colors text-xs"
+          title={linkedRewards.length > 0 ? linkedRewards.map(r => r.name).join(', ') : 'Rewards'}
+        >
+          {linkedRewards.length > 0 ? `${linkedRewards.length} Reward${linkedRewards.length > 1 ? 's' : ''}` : '★ Rewards'}
+        </button>
+        <button 
+          className="flex-1 rounded-xl px-4 py-3 text-white font-medium transition-colors text-xs"
+          style={{ backgroundColor: primary }}
+        >
+          Redeem
+        </button>
+      </div>
+      {primaryQRCode && (
+        <div className="flex justify-center pt-2">
+          <img src={primaryQRCode.dataUrl} alt="QR Code" className="h-16 w-16 rounded border border-gray-200" />
+        </div>
+      )}
     </div>
   );
 }
