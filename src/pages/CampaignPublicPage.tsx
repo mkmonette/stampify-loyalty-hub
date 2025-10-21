@@ -44,11 +44,12 @@ export default function CampaignPublicPage() {
       return;
     }
 
-    console.log('🔍 CampaignPublicPage mounted');
-    console.log('🎯 Looking for campaign slug:', slug);
+    console.log('🔍 CampaignPublicPage - searching for campaign');
+    console.log('🎯 Target slug:', slug);
     console.log('📊 Available campaigns:', campaigns);
-    console.log('📦 Raw localStorage campaigns:', localStorage.getItem('campaigns'));
-    console.log('📦 Raw localStorage businesses:', localStorage.getItem('businesses'));
+    console.log('📦 localStorage.campaigns:', localStorage.getItem('campaigns'));
+    console.log('📦 localStorage.db_campaigns:', localStorage.getItem('db_campaigns'));
+    console.log('📦 localStorage.businesses:', localStorage.getItem('businesses'));
     
     if (!slug) {
       console.warn('⚠️ No slug provided');
@@ -56,8 +57,16 @@ export default function CampaignPublicPage() {
       return;
     }
     
+    // Find campaign by slug
     const found = campaigns.find(c => c.slug === slug);
-    console.log('🔎 Found campaign:', found);
+    
+    if (found) {
+      console.log('✅ Campaign found:', found);
+    } else {
+      console.warn('❌ Campaign NOT found for slug:', slug);
+      console.log('Available slugs:', campaigns.map(c => c.slug));
+    }
+    
     setCampaign(found || null);
     
     if (found) {

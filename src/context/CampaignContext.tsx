@@ -21,8 +21,10 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const refreshCampaigns = () => {
     const data = Campaigns.list();
     setCampaigns(data);
-    console.log('📢 Campaigns synced:', data);
-    console.log('📦 Raw localStorage campaigns:', localStorage.getItem('campaigns'));
+    console.log('📢 Campaigns synced from unified source:', data);
+    console.log('📊 Campaign slugs available:', data.map(c => c.slug));
+    console.log('📦 localStorage.campaigns:', localStorage.getItem('campaigns'));
+    console.log('📦 localStorage.db_campaigns:', localStorage.getItem('db_campaigns'));
   };
 
   const refreshBusinesses = () => {

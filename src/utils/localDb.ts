@@ -157,7 +157,49 @@ export const Businesses = {
 
 // Campaigns
 export const Campaigns = {
-  list: (): Campaign[] => read<Campaign>(DB.campaigns),
+  list: (): Campaign[] => {
+    // Try to get campaigns from primary source
+    let campaigns = read<Campaign>(DB.campaigns);
+    console.log('📊 Loading campaigns from primary source:', campaigns.length);
+    
+    // If empty, try fallback source
+    if (campaigns.length === 0) {
+      const fallbackKey = 'db_campaigns';
+      try {
+        const fallbackRaw = localStorage.getItem(fallbackKey);
+        if (fallbackRaw) {
+          const fallbackData = JSON.parse(fallbackRaw) as any[];
+          console.log('📊 Found fallback campaigns in db_campaigns:', fallbackData.length);
+          
+          // Normalize fallback data
+          campaigns = fallbackData.map(item => ({
+            id: item.id || uid(),
+            slug: item.slug || generateSlug(item.name || 'campaign'),
+            name: item.name || 'Untitled Campaign',
+            description: item.description || '',
+            stampsRequired: item.stampsRequired || 10,
+            active: item.active !== undefined ? item.active : true,
+            businessId: item.businessId,
+            ownerId: item.ownerId,
+            contactEmail: item.contactEmail,
+            contactPhone: item.contactPhone,
+            socialLinks: item.socialLinks,
+            createdAt: item.createdAt || new Date().toISOString(),
+          }));
+          
+          // Save normalized campaigns to primary source
+          if (campaigns.length > 0) {
+            write(DB.campaigns, campaigns);
+            console.log('✅ Normalized and saved campaigns to primary source:', campaigns);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading fallback campaigns:', error);
+      }
+    }
+    
+    return campaigns;
+  },
   add: (input: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign => {
     const slug = generateSlug(input.name);
     const existing = Campaigns.findBySlug(slug);
