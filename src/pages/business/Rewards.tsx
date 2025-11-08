@@ -31,7 +31,7 @@ export default function BusinessRewardsPage() {
       description: desc, 
       stampsRequired, 
       active,
-      campaignId: campaignId || undefined
+      campaignId: campaignId && campaignId !== "none" ? campaignId : undefined
     });
     setItems(Rewards.list());
     setName("");
@@ -76,7 +76,7 @@ export default function BusinessRewardsPage() {
                   <SelectValue placeholder="Select a campaign..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No campaign</SelectItem>
+                  <SelectItem value="none">No campaign</SelectItem>
                   {campaigns.map(campaign => (
                     <SelectItem key={campaign.id} value={campaign.id}>
                       {campaign.name}
