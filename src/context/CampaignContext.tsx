@@ -109,8 +109,26 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
   // Initial load
   useEffect(() => {
+    // Initialize storage first
     refreshCampaigns();
     refreshBusinesses();
+    
+    // Then seed if empty (with a small delay to ensure storage is ready)
+    setTimeout(() => {
+      const currentCampaigns = Campaigns.list();
+      const currentBusinesses = Businesses.list();
+      
+      if (currentCampaigns.length === 0 || currentBusinesses.length === 0) {
+        console.log('🌱 Seeding demo data...');
+        import('@/utils/localDb').then(({ seedIfEmpty }) => {
+          seedIfEmpty();
+          // Refresh after seeding
+          refreshCampaigns();
+          refreshBusinesses();
+          console.log('✅ Demo data seeded and refreshed');
+        });
+      }
+    }, 100);
   }, []);
 
   // Cross-tab synchronization
