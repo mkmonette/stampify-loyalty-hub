@@ -19,6 +19,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [businesses, setBusinesses] = useState<Business[]>([]);
 
   const refreshCampaigns = () => {
+    // Initialize localStorage if null
+    if (localStorage.getItem('campaigns') === null) {
+      localStorage.setItem('campaigns', '[]');
+      console.log('🔧 Initialized empty campaigns array in localStorage');
+    }
+    
     const data = Campaigns.list();
     setCampaigns(data);
     console.log('📢 Campaigns synced from unified source:', data);
@@ -28,6 +34,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshBusinesses = () => {
+    // Initialize localStorage if null
+    if (localStorage.getItem('businesses') === null) {
+      localStorage.setItem('businesses', '[]');
+      console.log('🔧 Initialized empty businesses array in localStorage');
+    }
+    
     const data = Businesses.list();
     setBusinesses(data);
     console.log('📢 Businesses synced:', data);

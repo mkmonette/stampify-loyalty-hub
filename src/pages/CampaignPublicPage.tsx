@@ -34,7 +34,9 @@ export default function CampaignPublicPage() {
 
   // Wait for initial campaigns load
   useEffect(() => {
-    if (campaigns.length > 0 || localStorage.getItem('campaigns') === '[]') {
+    const campaignsData = localStorage.getItem('campaigns');
+    // Mark as complete if we have campaigns OR if localStorage is initialized (even if empty)
+    if (campaigns.length > 0 || campaignsData !== null) {
       setInitialLoadComplete(true);
     }
   }, [campaigns]);
