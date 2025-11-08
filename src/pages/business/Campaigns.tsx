@@ -224,7 +224,6 @@ export default function CampaignsPage() {
         </Card>
         
         <Card>
-        <Card>
           <CardHeader>
             <CardTitle>Create Campaign</CardTitle>
             <CardDescription>Define a new loyalty campaign</CardDescription>
@@ -242,8 +241,6 @@ export default function CampaignsPage() {
             </div>
             <Button onClick={add}>Add Campaign</Button>
           </CardContent>
-        </Card>
-
         </Card>
       </div>
 
