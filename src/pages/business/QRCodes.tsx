@@ -37,7 +37,7 @@ export default function QRCodesPage() {
       code: text,
       dataUrl,
       purpose,
-      campaignId: campaignId || undefined,
+      campaignId: campaignId && campaignId !== "none" ? campaignId : undefined,
       active
     });
     setItems(QRCodes.list());
@@ -84,7 +84,7 @@ export default function QRCodesPage() {
                     <SelectValue placeholder="Select a campaign..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No campaign</SelectItem>
+                    <SelectItem value="none">No campaign</SelectItem>
                     {campaigns.map(campaign => (
                       <SelectItem key={campaign.id} value={campaign.id}>
                         {campaign.name}
