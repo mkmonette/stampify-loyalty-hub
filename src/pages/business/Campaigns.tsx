@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Users, Eye } from "lucide-react";
+import { Copy, ExternalLink, Users, Eye, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCampaigns } from "@/context/CampaignContext";
 import ThemedCampaignCard from "@/components/campaign/ThemedCampaignCard";
+import { getBrandingForOwner } from "@/utils/templates";
 
 export default function CampaignsPage() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function CampaignsPage() {
   const [stampsRequired, setStampsRequired] = useState(10);
   const [active, setActive] = useState(true);
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
     console.log('🔍 Campaigns page mounted');
@@ -67,26 +69,55 @@ export default function CampaignsPage() {
   const add = () => {
     if (!name.trim()) return;
     
-    console.log('➕ Adding new campaign:', { name, desc, stampsRequired, active, businessId: business?.id, ownerId: user?.id });
-    
-    const newCampaign = Campaigns.add({ 
-      businessId: business?.id,
-      name, 
-      description: desc, 
-      stampsRequired, 
-      active,
-      ownerId: user?.id
-    });
-    
-    console.log('✅ Campaign added:', newCampaign);
-    console.log('📦 LocalStorage after add:', localStorage.getItem('campaigns'));
+    if (editingCampaign) {
+      // Update existing campaign
+      Campaigns.update(editingCampaign.id, {
+        name,
+        description: desc,
+        stampsRequired,
+        active
+      });
+      toast.success("Campaign updated successfully!");
+      setEditingCampaign(null);
+    } else {
+      // Create new campaign
+      console.log('➕ Adding new campaign:', { name, desc, stampsRequired, active, businessId: business?.id, ownerId: user?.id });
+      
+      const newCampaign = Campaigns.add({ 
+        businessId: business?.id,
+        name, 
+        description: desc, 
+        stampsRequired, 
+        active,
+        ownerId: user?.id
+      });
+      
+      console.log('✅ Campaign added:', newCampaign);
+      console.log('📦 LocalStorage after add:', localStorage.getItem('campaigns'));
+      toast.success("Campaign created and saved to localStorage!");
+    }
     
     refreshCampaigns();
     setName("");
     setDesc("");
     setStampsRequired(10);
     setActive(true);
-    toast.success("Campaign created and saved to localStorage!");
+  };
+
+  const startEdit = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setName(campaign.name);
+    setDesc(campaign.description || "");
+    setStampsRequired(campaign.stampsRequired);
+    setActive(campaign.active);
+  };
+
+  const cancelEdit = () => {
+    setEditingCampaign(null);
+    setName("");
+    setDesc("");
+    setStampsRequired(10);
+    setActive(true);
   };
 
   const toggleActive = (id: string, value: boolean) => {
@@ -213,7 +244,12 @@ export default function CampaignsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={() => startEdit(c)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -225,8 +261,8 @@ export default function CampaignsPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Create Campaign</CardTitle>
-            <CardDescription>Define a new loyalty campaign</CardDescription>
+            <CardTitle>{editingCampaign ? "Edit Campaign" : "Create Campaign"}</CardTitle>
+            <CardDescription>{editingCampaign ? "Update your loyalty campaign" : "Define a new loyalty campaign"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -239,7 +275,12 @@ export default function CampaignsPage() {
               <Switch checked={active} onCheckedChange={setActive} />
               <span className="text-sm">Active</span>
             </div>
-            <Button onClick={add}>Add Campaign</Button>
+            <div className="flex gap-2">
+              <Button onClick={add} className="flex-1">{editingCampaign ? "Update Campaign" : "Add Campaign"}</Button>
+              {editingCampaign && (
+                <Button variant="outline" onClick={cancelEdit}>Cancel</Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -261,23 +302,7 @@ export default function CampaignsPage() {
             <div className="mt-4 border rounded-lg p-6 bg-muted/50">
               <ThemedCampaignCard
                 campaign={previewCampaign}
-                branding={{
-                  id: business.id,
-                  ownerUserId: business.ownerId,
-                  templateId: 'grid',
-                  logoDataUrl: business.logo,
-                  paletteName: '',
-                  colors: {
-                    primary: business.colors.primary,
-                    secondary: business.colors.background,
-                    accent: business.colors.primary
-                  },
-                  templateStyle: business.template as any,
-                  stampShape: 'rounded-square',
-                  layout: 'vertical',
-                  backgroundDataUrl: '',
-                  updatedAt: new Date().toISOString()
-                }}
+                branding={getBrandingForOwner(previewCampaign.ownerId || business.ownerId)}
                 earnedStamps={0}
                 isReadOnly={true}
               />

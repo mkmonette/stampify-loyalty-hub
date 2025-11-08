@@ -19,6 +19,7 @@ export default function QRCodesPage() {
   const [purpose, setPurpose] = useState("");
   const [campaignId, setCampaignId] = useState<string>("");
   const [active, setActive] = useState(true);
+  const [editingQR, setEditingQR] = useState<QRCodeData | null>(null);
 
   const title = useMemo(() => `QR Codes | Stampify`, []);
 
@@ -33,14 +34,47 @@ export default function QRCodesPage() {
 
   const save = () => {
     if (!text.trim() || !dataUrl) return;
-    QRCodes.add({
-      code: text,
-      dataUrl,
-      purpose,
-      campaignId: campaignId && campaignId !== "none" ? campaignId : undefined,
-      active
-    });
+    
+    if (editingQR) {
+      // Update existing QR code
+      QRCodes.update(editingQR.id, {
+        code: text,
+        dataUrl,
+        purpose,
+        campaignId: campaignId && campaignId !== "none" ? campaignId : undefined,
+        active
+      });
+      setEditingQR(null);
+    } else {
+      // Create new QR code
+      QRCodes.add({
+        code: text,
+        dataUrl,
+        purpose,
+        campaignId: campaignId && campaignId !== "none" ? campaignId : undefined,
+        active
+      });
+    }
+    
     setItems(QRCodes.list());
+    setText("stamp:campaign:coffee");
+    setDataUrl(null);
+    setPurpose("");
+    setCampaignId("");
+    setActive(true);
+  };
+
+  const startEdit = (qr: QRCodeData) => {
+    setEditingQR(qr);
+    setText(qr.code);
+    setDataUrl(qr.dataUrl);
+    setPurpose(qr.purpose || "");
+    setCampaignId(qr.campaignId || "");
+    setActive(qr.active);
+  };
+
+  const cancelEdit = () => {
+    setEditingQR(null);
     setText("stamp:campaign:coffee");
     setDataUrl(null);
     setPurpose("");
@@ -65,8 +99,8 @@ export default function QRCodesPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>QR Code Generator</CardTitle>
-              <CardDescription>Create and save QR codes for your campaigns</CardDescription>
+              <CardTitle>{editingQR ? "Edit QR Code" : "QR Code Generator"}</CardTitle>
+              <CardDescription>{editingQR ? "Update your QR code" : "Create and save QR codes for your campaigns"}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -97,7 +131,12 @@ export default function QRCodesPage() {
                 <Switch checked={active} onCheckedChange={setActive} />
                 <span className="text-sm">Active</span>
               </div>
-              <Button onClick={generate}>Generate Preview</Button>
+              <div className="flex gap-2">
+                <Button onClick={generate} className="flex-1">Generate Preview</Button>
+                {editingQR && (
+                  <Button variant="outline" onClick={cancelEdit}>Cancel</Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -108,10 +147,10 @@ export default function QRCodesPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {dataUrl ? (
-                <div className="space-y-3">
+                  <div className="space-y-3">
                   <img src={dataUrl} alt="generated qr code for loyalty" className="h-64 w-64 rounded-md border border-border mx-auto" loading="lazy" />
                   <div className="flex gap-2">
-                    <Button onClick={save} className="flex-1">Save QR Code</Button>
+                    <Button onClick={save} className="flex-1">{editingQR ? "Update QR Code" : "Save QR Code"}</Button>
                     <a href={dataUrl} download="qr.png" className="inline-flex items-center justify-center rounded-md bg-secondary px-3 py-2 text-secondary-foreground hover:opacity-90 transition">Download</a>
                   </div>
                 </div>
@@ -160,7 +199,10 @@ export default function QRCodesPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" onClick={() => { QRCodes.remove(qr.id); setItems(QRCodes.list()); }}>Delete</Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={() => startEdit(qr)}>Edit</Button>
+                          <Button variant="outline" size="sm" onClick={() => { QRCodes.remove(qr.id); setItems(QRCodes.list()); }}>Delete</Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
