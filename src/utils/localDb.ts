@@ -359,6 +359,8 @@ export const CustomerCampaigns = {
 
 // Seed demo data if empty
 export function seedIfEmpty() {
+  const demoOwnerId = 'demo-business-admin';
+  
   // Seed demo business first
   if (Businesses.list().length === 0) {
     const demoBusiness = Businesses.add({
@@ -370,7 +372,7 @@ export function seedIfEmpty() {
         primary: '#8B4513',
         background: '#FFF8F0'
       },
-      ownerId: 'demo-business-admin'
+      ownerId: demoOwnerId
     });
 
     // Seed campaigns linked to business
@@ -381,7 +383,7 @@ export function seedIfEmpty() {
         description: 'Buy 9 get 1 free', 
         stampsRequired: 10, 
         active: true,
-        ownerId: 'demo-business-admin',
+        ownerId: demoOwnerId,
         contactEmail: 'coffee@demo.com',
         socialLinks: {
           website: 'https://example.com',
@@ -394,7 +396,7 @@ export function seedIfEmpty() {
         description: 'Collect 5 stamps', 
         stampsRequired: 5, 
         active: true,
-        ownerId: 'demo-business-admin',
+        ownerId: demoOwnerId,
         contactEmail: 'sandwich@demo.com'
       });
     }

@@ -33,6 +33,28 @@ export default function CampaignsPage() {
     console.log('📦 Current localStorage businesses:', localStorage.getItem('businesses'));
     
     seedIfEmpty();
+    
+    // Fix campaigns without ownerId
+    const allCampaigns = Campaigns.list();
+    const businesses = Businesses.list();
+    let fixed = false;
+    
+    allCampaigns.forEach(campaign => {
+      if (!campaign.ownerId) {
+        // Try to get ownerId from linked business
+        const linkedBusiness = businesses.find(b => b.id === campaign.businessId);
+        const newOwnerId = linkedBusiness?.ownerId || user?.id || 'demo-business-admin';
+        
+        console.log(`🔧 Fixing campaign ${campaign.name} - setting ownerId to ${newOwnerId}`);
+        Campaigns.update(campaign.id, { ownerId: newOwnerId });
+        fixed = true;
+      }
+    });
+    
+    if (fixed) {
+      console.log('✅ Fixed campaigns with missing ownerId');
+    }
+    
     refreshCampaigns();
     
     console.log('📊 After seed - Campaigns from context:', campaigns);
@@ -70,12 +92,14 @@ export default function CampaignsPage() {
     if (!name.trim()) return;
     
     if (editingCampaign) {
-      // Update existing campaign
+      // Update existing campaign - preserve ownerId
       Campaigns.update(editingCampaign.id, {
         name,
         description: desc,
         stampsRequired,
-        active
+        active,
+        businessId: business?.id,
+        ownerId: editingCampaign.ownerId || user?.id
       });
       toast.success("Campaign updated successfully!");
       setEditingCampaign(null);
