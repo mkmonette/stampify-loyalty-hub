@@ -109,6 +109,21 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
   // Initial load
   useEffect(() => {
+    console.log('🔄 CampaignProvider: Loading initial data');
+    
+    // Check for and clean up demo data
+    const existingCampaigns = Campaigns.list();
+    const hasDemoData = existingCampaigns.some(
+      c => c.ownerId === 'demo-business-admin' || c.slug === 'sandwich-club'
+    );
+    
+    if (hasDemoData) {
+      console.log('🧹 Found demo data, cleaning up localStorage...');
+      localStorage.removeItem('campaigns');
+      localStorage.removeItem('db_campaigns');
+      console.log('✅ Cleared demo campaigns from localStorage');
+    }
+    
     // Initialize storage first
     refreshCampaigns();
     refreshBusinesses();
@@ -126,7 +141,11 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           refreshCampaigns();
           refreshBusinesses();
           console.log('✅ Demo data seeded and refreshed');
+          console.log('🟩 All campaigns in memory:', Campaigns.list());
         });
+      } else {
+        console.log('✅ Initial data loaded:', { campaigns: currentCampaigns.length, businesses: currentBusinesses.length });
+        console.log('🟩 All campaigns in memory:', currentCampaigns);
       }
     }, 100);
   }, []);

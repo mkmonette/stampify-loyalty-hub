@@ -41,6 +41,19 @@ export default function Register() {
     setError(null);
     try {
       const created = await registerUser({ email: values.email, password: values.password, role: values.role as Role, name: values.name });
+      
+      // If customer, redirect to first active campaign
+      if (created.role === 'customer') {
+        const { Campaigns } = await import('@/utils/localDb');
+        const campaigns = Campaigns.list();
+        const firstActive = campaigns.find(c => c.active);
+        
+        if (firstActive) {
+          navigate(`/campaigns/${firstActive.slug}`, { replace: true });
+          return;
+        }
+      }
+      
       navigate(getDashboardPathForRole(created.role), { replace: true });
     } catch (e: any) {
       setError(e?.message ?? "Registration failed");

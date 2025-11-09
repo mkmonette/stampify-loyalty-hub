@@ -36,6 +36,19 @@ export default function Login() {
     setError(null);
     try {
       const loggedIn = await login(values.email, values.password);
+      
+      // If customer and no redirect path, go to first active campaign
+      if (loggedIn.role === 'customer' && !location.state?.from) {
+        const { Campaigns } = await import('@/utils/localDb');
+        const campaigns = Campaigns.list();
+        const firstActive = campaigns.find(c => c.active);
+        
+        if (firstActive) {
+          navigate(`/campaigns/${firstActive.slug}`, { replace: true });
+          return;
+        }
+      }
+      
       const to = location.state?.from ?? getDashboardPathForRole(loggedIn.role);
       navigate(to, { replace: true });
     } catch (e: any) {

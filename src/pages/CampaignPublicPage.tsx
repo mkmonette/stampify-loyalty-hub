@@ -38,6 +38,7 @@ export default function CampaignPublicPage() {
     // Mark as complete if we have campaigns OR if localStorage is initialized (even if empty)
     if (campaigns.length > 0 || campaignsData !== null) {
       setInitialLoadComplete(true);
+      console.log('✅ Initial campaigns load complete');
     }
   }, [campaigns]);
 
@@ -60,11 +61,13 @@ export default function CampaignPublicPage() {
       return;
     }
     
-    // Find campaign by slug
+    // Find campaign by slug - only match from synced campaigns list
     const found = campaigns.find(c => c.slug === slug);
     
+    console.log('🟩 All campaigns in memory:', campaigns);
+    
     if (found) {
-      console.log('✅ Campaign found:', found);
+      console.log('🟩 Loaded campaign:', found);
     } else {
       console.warn('❌ Campaign NOT found for slug:', slug);
       console.log('Available slugs:', campaigns.map(c => c.slug));
@@ -108,7 +111,7 @@ export default function CampaignPublicPage() {
     }
   }, [campaign, branding]);
 
-  if (loading) {
+  if (loading || !initialLoadComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Loading campaign...</p>
