@@ -232,8 +232,10 @@ export const Campaigns = {
     if (updated) console.log('✅ Campaign updated:', updated);
   },
   remove: (id: ID) => {
+    const before = Campaigns.list().length;
     write(DB.campaigns, Campaigns.list().filter((c) => c.id !== id));
-    console.log('✅ Campaign removed:', id);
+    const after = Campaigns.list().length;
+    console.log(`🗑️ Campaign removed. Before: ${before}, After: ${after}`);
   },
   findBySlug: (slug: string): Campaign | undefined => Campaigns.list().find((c) => c.slug === slug),
   byBusiness: (businessId: ID): Campaign[] => Campaigns.list().filter((c) => c.businessId === businessId),
@@ -285,7 +287,12 @@ export const QRCodes = {
     const items = QRCodes.list().map((q) => (q.id === id ? { ...q, ...patch } : q));
     write(DB.qrcodes, items);
   },
-  remove: (id: ID) => write(DB.qrcodes, QRCodes.list().filter((q) => q.id !== id)),
+  remove: (id: ID) => {
+    const before = QRCodes.list().length;
+    write(DB.qrcodes, QRCodes.list().filter((q) => q.id !== id));
+    const after = QRCodes.list().length;
+    console.log(`🗑️ QR Code removed. Before: ${before}, After: ${after}`);
+  },
 };
 
 // Loyalty Cards
@@ -357,12 +364,20 @@ export const CustomerCampaigns = {
     CustomerCampaigns.list().filter((cc) => cc.campaignId === campaignId).length,
 };
 
-// Seed demo data if empty
+// Seed demo data if empty (only on first initialization)
 export function seedIfEmpty() {
+  // Check if app has been initialized before
+  const isInitialized = localStorage.getItem('app_initialized');
+  if (isInitialized === 'true') {
+    console.log('✅ App already initialized, skipping seed');
+    return;
+  }
+
   const demoOwnerId = 'demo-business-admin';
   
-  // Seed demo business first
+  // Seed demo business only if businesses are empty
   if (Businesses.list().length === 0) {
+    console.log('🌱 First-time initialization: seeding demo business');
     const demoBusiness = Businesses.add({
       name: 'Demo Coffee Shop',
       description: 'Your favorite local coffee spot',
@@ -375,8 +390,9 @@ export function seedIfEmpty() {
       ownerId: demoOwnerId
     });
 
-    // Seed campaigns linked to business
+    // Seed campaigns linked to business only if campaigns are empty
     if (Campaigns.list().length === 0) {
+      console.log('🌱 Seeding demo campaigns');
       Campaigns.add({ 
         businessId: demoBusiness.id,
         name: 'Coffee Lovers', 
@@ -390,22 +406,12 @@ export function seedIfEmpty() {
           instagram: 'https://instagram.com/coffeelovers'
         }
       });
-      Campaigns.add({ 
-        businessId: demoBusiness.id,
-        name: 'Sandwich Club', 
-        description: 'Collect 5 stamps', 
-        stampsRequired: 5, 
-        active: true,
-        ownerId: demoOwnerId,
-        contactEmail: 'sandwich@demo.com'
-      });
     }
   }
   
-  if (Rewards.list().length === 0) {
-    Rewards.add({ name: 'Free Coffee', description: 'Redeem with 10 stamps', stampsRequired: 10, active: true });
-    Rewards.add({ name: 'Free Muffin', description: '5 stamps', stampsRequired: 5, active: true });
-  }
+  // Mark as initialized
+  localStorage.setItem('app_initialized', 'true');
+  console.log('✅ App initialization complete');
 }
 
 // Helper functions for easy access
@@ -415,4 +421,20 @@ export function saveBusiness(business: Omit<Business, 'id' | 'createdAt' | 'slug
 
 export function saveCampaign(campaign: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign {
   return Campaigns.add(campaign);
+}
+
+// Clear all data (useful for testing or resetting app state)
+export function clearAllData() {
+  console.log('🧹 Clearing all localStorage data...');
+  localStorage.removeItem(DB.businesses);
+  localStorage.removeItem(DB.campaigns);
+  localStorage.removeItem(DB.rewards);
+  localStorage.removeItem(DB.coupons);
+  localStorage.removeItem(DB.cards);
+  localStorage.removeItem(DB.redemptions);
+  localStorage.removeItem(DB.referrals);
+  localStorage.removeItem(DB.customerCampaigns);
+  localStorage.removeItem(DB.qrcodes);
+  localStorage.removeItem('app_initialized');
+  console.log('✅ All data cleared from localStorage');
 }

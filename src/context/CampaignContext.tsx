@@ -115,13 +115,13 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     refreshCampaigns();
     refreshBusinesses();
     
-    // Then seed if empty (with a small delay to ensure storage is ready)
+    // Then seed if empty on first initialization only
     setTimeout(() => {
       const currentCampaigns = Campaigns.list();
       const currentBusinesses = Businesses.list();
       
-      if (currentCampaigns.length === 0 || currentBusinesses.length === 0) {
-        console.log('🌱 Seeding demo data...');
+      if (currentBusinesses.length === 0) {
+        console.log('🌱 First initialization - seeding demo data...');
         import('@/utils/localDb').then(({ seedIfEmpty }) => {
           seedIfEmpty();
           // Refresh after seeding
