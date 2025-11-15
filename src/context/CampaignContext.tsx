@@ -25,12 +25,19 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       console.log('🔧 Initialized empty campaigns array in localStorage');
     }
     
+    // CLEANUP: Remove old db_campaigns if it exists
+    const oldDbCampaigns = localStorage.getItem('db_campaigns');
+    if (oldDbCampaigns) {
+      console.log('🧹 Found old db_campaigns data, removing:', oldDbCampaigns);
+      localStorage.removeItem('db_campaigns');
+      console.log('✅ Cleared old db_campaigns from localStorage');
+    }
+    
     const data = Campaigns.list();
     setCampaigns(data);
     console.log('📢 Campaigns synced from unified source:', data);
     console.log('📊 Campaign slugs available:', data.map(c => c.slug));
     console.log('📦 localStorage.campaigns:', localStorage.getItem('campaigns'));
-    console.log('📦 localStorage.db_campaigns:', localStorage.getItem('db_campaigns'));
   };
 
   const refreshBusinesses = () => {
@@ -39,6 +46,15 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('businesses', '[]');
       console.log('🔧 Initialized empty businesses array in localStorage');
     }
+    
+    // CLEANUP: Remove any old business-related keys
+    const oldKeys = ['db_businesses', 'business_data'];
+    oldKeys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        console.log(`🧹 Removing old localStorage key: ${key}`);
+        localStorage.removeItem(key);
+      }
+    });
     
     const data = Businesses.list();
     setBusinesses(data);
@@ -111,7 +127,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔄 CampaignProvider: Loading initial data');
     
-    // Initialize storage first
+    // Run data migration first (one-time)
+    import('@/utils/localDb').then(({ migrateOldData }) => {
+      migrateOldData();
+    });
+    
+    // Initialize storage
     refreshCampaigns();
     refreshBusinesses();
     

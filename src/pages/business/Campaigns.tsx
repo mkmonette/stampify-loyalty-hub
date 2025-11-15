@@ -32,6 +32,20 @@ export default function CampaignsPage() {
     console.log('📦 Current localStorage campaigns:', localStorage.getItem('campaigns'));
     console.log('📦 Current localStorage businesses:', localStorage.getItem('businesses'));
     
+    // CLEANUP: Remove old localStorage keys on campaigns page load
+    const oldKeys = ['db_campaigns', 'db_rewards', 'db_coupons', 'db_loyalty_cards', 'db_redemptions', 'db_referrals', 'db_customer_campaigns'];
+    let cleaned = false;
+    oldKeys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        console.log(`🧹 Cleaning up old localStorage key: ${key}`);
+        localStorage.removeItem(key);
+        cleaned = true;
+      }
+    });
+    if (cleaned) {
+      console.log('✅ Cleaned up old localStorage keys');
+    }
+    
     seedIfEmpty();
     
     // Fix campaigns without ownerId

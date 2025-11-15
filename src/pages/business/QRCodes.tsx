@@ -24,7 +24,16 @@ export default function QRCodesPage() {
   const title = useMemo(() => `QR Codes | Stampify`, []);
 
   useEffect(() => {
+    // CLEANUP: Remove old db_qrcodes if it exists
+    const oldQRKey = 'db_qrcodes';
+    if (localStorage.getItem(oldQRKey)) {
+      console.log('🧹 Found old db_qrcodes, removing...');
+      localStorage.removeItem(oldQRKey);
+      console.log('✅ Cleaned up old QR codes data');
+    }
+    
     setItems(QRCodes.list());
+    console.log('📊 QR Codes loaded:', QRCodes.list());
   }, []);
 
   const generate = async () => {
