@@ -100,13 +100,13 @@ export type CustomerCampaign = {
 const DB = {
   businesses: 'businesses',
   campaigns: 'campaigns',
-  rewards: 'db_rewards',
-  coupons: 'db_coupons',
-  cards: 'db_loyalty_cards',
-  redemptions: 'db_redemptions',
-  referrals: 'db_referrals',
-  customerCampaigns: 'db_customer_campaigns',
-  qrcodes: 'db_qrcodes',
+  rewards: 'rewards',
+  coupons: 'coupons',
+  cards: 'loyalty_cards',
+  redemptions: 'redemptions',
+  referrals: 'referrals',
+  customerCampaigns: 'customer_campaigns',
+  qrcodes: 'qrcodes',
 } as const;
 
 type Key = typeof DB[keyof typeof DB];
@@ -426,6 +426,7 @@ export function saveCampaign(campaign: Omit<Campaign, 'id' | 'createdAt' | 'slug
 // Clear all data (useful for testing or resetting app state)
 export function clearAllData() {
   console.log('🧹 Clearing all localStorage data...');
+  // Clear new keys
   localStorage.removeItem(DB.businesses);
   localStorage.removeItem(DB.campaigns);
   localStorage.removeItem(DB.rewards);
@@ -435,6 +436,60 @@ export function clearAllData() {
   localStorage.removeItem(DB.referrals);
   localStorage.removeItem(DB.customerCampaigns);
   localStorage.removeItem(DB.qrcodes);
+  // Clear old db_ prefixed keys
+  localStorage.removeItem('db_campaigns');
+  localStorage.removeItem('db_rewards');
+  localStorage.removeItem('db_coupons');
+  localStorage.removeItem('db_loyalty_cards');
+  localStorage.removeItem('db_redemptions');
+  localStorage.removeItem('db_referrals');
+  localStorage.removeItem('db_customer_campaigns');
+  localStorage.removeItem('db_qrcodes');
   localStorage.removeItem('app_initialized');
   console.log('✅ All data cleared from localStorage');
+}
+
+// Migrate data from old db_ prefixed keys to new clean keys (one-time migration)
+export function migrateOldData() {
+  const migrated = localStorage.getItem('data_migrated');
+  if (migrated === 'true') {
+    return; // Already migrated
+  }
+  
+  console.log('🔄 Checking for old data to migrate...');
+  
+  const migrations = [
+    { old: 'db_rewards', new: 'rewards' },
+    { old: 'db_coupons', new: 'coupons' },
+    { old: 'db_loyalty_cards', new: 'loyalty_cards' },
+    { old: 'db_redemptions', new: 'redemptions' },
+    { old: 'db_referrals', new: 'referrals' },
+    { old: 'db_customer_campaigns', new: 'customer_campaigns' },
+    { old: 'db_qrcodes', new: 'qrcodes' },
+  ];
+  
+  let migrationCount = 0;
+  migrations.forEach(({ old, new: newKey }) => {
+    const oldData = localStorage.getItem(old);
+    const newData = localStorage.getItem(newKey);
+    
+    // Only migrate if old data exists and new data doesn't (or is empty)
+    if (oldData && (!newData || newData === '[]')) {
+      console.log(`📦 Migrating ${old} -> ${newKey}`);
+      localStorage.setItem(newKey, oldData);
+      localStorage.removeItem(old);
+      migrationCount++;
+    } else if (oldData) {
+      // New data exists, just remove old
+      console.log(`🧹 Removing duplicate old key: ${old}`);
+      localStorage.removeItem(old);
+    }
+  });
+  
+  if (migrationCount > 0) {
+    console.log(`✅ Migrated ${migrationCount} data keys`);
+  }
+  
+  localStorage.setItem('data_migrated', 'true');
+  console.log('✅ Data migration complete');
 }
