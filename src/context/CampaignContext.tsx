@@ -172,7 +172,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
 export function useCampaigns() {
   const context = useContext(CampaignContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useCampaigns must be used within CampaignProvider');
   }
   return context;
