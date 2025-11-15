@@ -87,6 +87,12 @@ export default function QRCodesPage() {
     setItems(QRCodes.list());
   };
 
+  const deleteQR = (id: string) => {
+    QRCodes.remove(id);
+    setItems(QRCodes.list());
+    console.log('🗑️ QR Code deleted, list refreshed');
+  };
+
   return (
     <main className="min-h-[calc(100vh-3rem)] p-6">
       <Helmet>
@@ -201,7 +207,7 @@ export default function QRCodesPage() {
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           <Button variant="outline" size="sm" onClick={() => startEdit(qr)}>Edit</Button>
-                          <Button variant="outline" size="sm" onClick={() => { QRCodes.remove(qr.id); setItems(QRCodes.list()); }}>Delete</Button>
+                          <Button variant="outline" size="sm" onClick={() => deleteQR(qr.id)}>Delete</Button>
                         </div>
                       </TableCell>
                     </TableRow>

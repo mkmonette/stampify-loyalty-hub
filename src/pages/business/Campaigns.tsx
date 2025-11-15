@@ -93,32 +93,29 @@ export default function CampaignsPage() {
     
     if (editingCampaign) {
       // Update existing campaign - preserve ownerId
+      console.log('✏️ Updating campaign:', editingCampaign.id);
       Campaigns.update(editingCampaign.id, {
         name,
         description: desc,
         stampsRequired,
         active,
         businessId: business?.id,
-        ownerId: editingCampaign.ownerId || user?.id
+        ownerId: editingCampaign.ownerId || user?.id || 'demo-business-admin'
       });
-      toast.success("Campaign updated successfully!");
+      console.log('✅ Campaign updated');
       setEditingCampaign(null);
     } else {
       // Create new campaign
       console.log('➕ Adding new campaign:', { name, desc, stampsRequired, active, businessId: business?.id, ownerId: user?.id });
-      
-      const newCampaign = Campaigns.add({ 
-        businessId: business?.id,
-        name, 
-        description: desc, 
-        stampsRequired, 
+      Campaigns.add({
+        name,
+        description: desc,
+        stampsRequired,
         active,
-        ownerId: user?.id
+        businessId: business?.id,
+        ownerId: user?.id || 'demo-business-admin'
       });
-      
-      console.log('✅ Campaign added:', newCampaign);
-      console.log('📦 LocalStorage after add:', localStorage.getItem('campaigns'));
-      toast.success("Campaign created and saved to localStorage!");
+      console.log('✅ Campaign added');
     }
     
     refreshCampaigns();
@@ -126,6 +123,13 @@ export default function CampaignsPage() {
     setDesc("");
     setStampsRequired(10);
     setActive(true);
+  };
+
+  const deleteCampaign = (id: string) => {
+    console.log('🗑️ Deleting campaign:', id);
+    Campaigns.remove(id);
+    refreshCampaigns();
+    console.log('✅ Campaign deleted and list refreshed');
   };
 
   const startEdit = (campaign: Campaign) => {
@@ -272,7 +276,7 @@ export default function CampaignsPage() {
                           <Button variant="outline" size="sm" onClick={() => startEdit(c)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => { Campaigns.remove(c.id); refreshCampaigns(); }}>Delete</Button>
+                          <Button variant="outline" size="sm" onClick={() => deleteCampaign(c.id)}>Delete</Button>
                         </div>
                       </TableCell>
                     </TableRow>
