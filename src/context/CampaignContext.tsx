@@ -115,19 +115,33 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     refreshCampaigns();
     refreshBusinesses();
     
-    // Then seed if empty on first initialization only
+    // Check data integrity - if we have businesses but no campaigns and app is initialized, reset
     setTimeout(() => {
       const currentCampaigns = Campaigns.list();
       const currentBusinesses = Businesses.list();
+      const isInitialized = localStorage.getItem('app_initialized') === 'true';
       
-      if (currentBusinesses.length === 0) {
-        console.log('🌱 First initialization - seeding demo data...');
+      console.log('🔍 Data integrity check:', {
+        campaigns: currentCampaigns.length,
+        businesses: currentBusinesses.length,
+        isInitialized
+      });
+      
+      // If we have businesses but no campaigns, something went wrong - reset
+      if (currentBusinesses.length > 0 && currentCampaigns.length === 0 && isInitialized) {
+        console.log('⚠️ Data inconsistency detected: businesses exist but no campaigns. Resetting initialization...');
+        localStorage.removeItem('app_initialized');
+      }
+      
+      // Seed if needed
+      if (currentBusinesses.length === 0 || currentCampaigns.length === 0) {
+        console.log('🌱 Seeding data...');
         import('@/utils/localDb').then(({ seedIfEmpty }) => {
           seedIfEmpty();
           // Refresh after seeding
           refreshCampaigns();
           refreshBusinesses();
-          console.log('✅ Demo data seeded and refreshed');
+          console.log('✅ Data seeded and refreshed');
           console.log('🟩 All campaigns in memory:', Campaigns.list());
         });
       } else {
