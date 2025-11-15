@@ -111,19 +111,6 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔄 CampaignProvider: Loading initial data');
     
-    // Check for and clean up demo data
-    const existingCampaigns = Campaigns.list();
-    const hasDemoData = existingCampaigns.some(
-      c => c.ownerId === 'demo-business-admin' || c.slug === 'sandwich-club'
-    );
-    
-    if (hasDemoData) {
-      console.log('🧹 Found demo data, cleaning up localStorage...');
-      localStorage.removeItem('campaigns');
-      localStorage.removeItem('db_campaigns');
-      console.log('✅ Cleared demo campaigns from localStorage');
-    }
-    
     // Initialize storage first
     refreshCampaigns();
     refreshBusinesses();
