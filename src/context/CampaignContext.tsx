@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Campaigns, Campaign, Businesses, Business } from '@/utils/localDb';
+import { Campaigns, Campaign, Businesses, Business, cleanupOldData, seedIfEmpty } from '@/utils/localDb';
 
 interface CampaignContextType {
   campaigns: Campaign[];
@@ -127,10 +127,8 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔄 CampaignProvider: Loading initial data');
     
-    // Run data migration first (one-time)
-    import('@/utils/localDb').then(({ migrateOldData }) => {
-      migrateOldData();
-    });
+    // Clean up ALL old data keys on every start
+    cleanupOldData();
     
     // Initialize storage
     refreshCampaigns();
@@ -157,14 +155,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       // Seed if needed
       if (currentBusinesses.length === 0 || currentCampaigns.length === 0) {
         console.log('🌱 Seeding data...');
-        import('@/utils/localDb').then(({ seedIfEmpty }) => {
-          seedIfEmpty();
-          // Refresh after seeding
-          refreshCampaigns();
-          refreshBusinesses();
-          console.log('✅ Data seeded and refreshed');
-          console.log('🟩 All campaigns in memory:', Campaigns.list());
-        });
+        seedIfEmpty();
+        // Refresh after seeding
+        refreshCampaigns();
+        refreshBusinesses();
+        console.log('✅ Data seeded and refreshed');
+        console.log('🟩 All campaigns in memory:', Campaigns.list());
       } else {
         console.log('✅ Initial data loaded:', { campaigns: currentCampaigns.length, businesses: currentBusinesses.length });
         console.log('🟩 All campaigns in memory:', currentCampaigns);
