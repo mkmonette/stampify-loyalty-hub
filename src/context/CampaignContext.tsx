@@ -134,7 +134,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     refreshCampaigns();
     refreshBusinesses();
     
-    // Check data integrity - if we have businesses but no campaigns and app is initialized, reset
+    // Seed demo data only if this is truly the first initialization
     setTimeout(() => {
       const currentCampaigns = Campaigns.list();
       const currentBusinesses = Businesses.list();
@@ -146,24 +146,25 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         isInitialized
       });
       
-      // If we have businesses but no campaigns, something went wrong - reset
-      if (currentBusinesses.length > 0 && currentCampaigns.length === 0 && isInitialized) {
-        console.log('⚠️ Data inconsistency detected: businesses exist but no campaigns. Resetting initialization...');
-        localStorage.removeItem('app_initialized');
-      }
-      
-      // Seed if needed
-      if (currentBusinesses.length === 0 || currentCampaigns.length === 0) {
-        console.log('🌱 Seeding data...');
+      // Only seed if app has never been initialized (first-time setup)
+      if (!isInitialized) {
+        console.log('🌱 First-time initialization: seeding demo data...');
         seedIfEmpty();
         // Refresh after seeding
         refreshCampaigns();
         refreshBusinesses();
-        console.log('✅ Data seeded and refreshed');
+        console.log('✅ Demo data seeded and refreshed');
         console.log('🟩 All campaigns in memory:', Campaigns.list());
       } else {
-        console.log('✅ Initial data loaded:', { campaigns: currentCampaigns.length, businesses: currentBusinesses.length });
-        console.log('🟩 All campaigns in memory:', currentCampaigns);
+        console.log('✅ App already initialized. Current data:', { 
+          campaigns: currentCampaigns.length, 
+          businesses: currentBusinesses.length 
+        });
+        if (currentCampaigns.length > 0) {
+          console.log('🟩 All campaigns in memory:', currentCampaigns);
+        } else {
+          console.log('📭 No campaigns found (user may have deleted all campaigns)');
+        }
       }
     }, 100);
   }, []);
