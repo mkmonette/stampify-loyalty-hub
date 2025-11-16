@@ -170,46 +170,8 @@ export const Businesses = {
 // Campaigns
 export const Campaigns = {
   list: (): Campaign[] => {
-    // Try to get campaigns from primary source
-    let campaigns = read<Campaign>(DB.campaigns);
+    const campaigns = read<Campaign>(DB.campaigns);
     console.log('📊 Loading campaigns from primary source:', campaigns.length);
-    
-    // If empty, try fallback source
-    if (campaigns.length === 0) {
-      const fallbackKey = 'db_campaigns';
-      try {
-        const fallbackRaw = localStorage.getItem(fallbackKey);
-        if (fallbackRaw) {
-          const fallbackData = JSON.parse(fallbackRaw) as any[];
-          console.log('📊 Found fallback campaigns in db_campaigns:', fallbackData.length);
-          
-          // Normalize fallback data
-          campaigns = fallbackData.map(item => ({
-            id: item.id || uid(),
-            slug: item.slug || generateSlug(item.name || 'campaign'),
-            name: item.name || 'Untitled Campaign',
-            description: item.description || '',
-            stampsRequired: item.stampsRequired || 10,
-            active: item.active !== undefined ? item.active : true,
-            businessId: item.businessId,
-            ownerId: item.ownerId,
-            contactEmail: item.contactEmail,
-            contactPhone: item.contactPhone,
-            socialLinks: item.socialLinks,
-            createdAt: item.createdAt || new Date().toISOString(),
-          }));
-          
-          // Save normalized campaigns to primary source
-          if (campaigns.length > 0) {
-            write(DB.campaigns, campaigns);
-            console.log('✅ Normalized and saved campaigns to primary source:', campaigns);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error loading fallback campaigns:', error);
-      }
-    }
-    
     return campaigns;
   },
   add: (input: Omit<Campaign, 'id' | 'createdAt' | 'slug'>): Campaign => {
@@ -449,47 +411,31 @@ export function clearAllData() {
   console.log('✅ All data cleared from localStorage');
 }
 
-// Migrate data from old db_ prefixed keys to new clean keys (one-time migration)
-export function migrateOldData() {
-  const migrated = localStorage.getItem('data_migrated');
-  if (migrated === 'true') {
-    return; // Already migrated
-  }
+// Force cleanup of ALL old data keys on every app start
+export function cleanupOldData() {
+  console.log('🧹 Cleaning up old data keys...');
   
-  console.log('🔄 Checking for old data to migrate...');
-  
-  const migrations = [
-    { old: 'db_rewards', new: 'rewards' },
-    { old: 'db_coupons', new: 'coupons' },
-    { old: 'db_loyalty_cards', new: 'loyalty_cards' },
-    { old: 'db_redemptions', new: 'redemptions' },
-    { old: 'db_referrals', new: 'referrals' },
-    { old: 'db_customer_campaigns', new: 'customer_campaigns' },
-    { old: 'db_qrcodes', new: 'qrcodes' },
+  const oldKeys = [
+    'db_campaigns',
+    'db_rewards',
+    'db_coupons',
+    'db_loyalty_cards',
+    'db_redemptions',
+    'db_referrals',
+    'db_customer_campaigns',
+    'db_qrcodes',
   ];
   
-  let migrationCount = 0;
-  migrations.forEach(({ old, new: newKey }) => {
-    const oldData = localStorage.getItem(old);
-    const newData = localStorage.getItem(newKey);
-    
-    // Only migrate if old data exists and new data doesn't (or is empty)
-    if (oldData && (!newData || newData === '[]')) {
-      console.log(`📦 Migrating ${old} -> ${newKey}`);
-      localStorage.setItem(newKey, oldData);
-      localStorage.removeItem(old);
-      migrationCount++;
-    } else if (oldData) {
-      // New data exists, just remove old
-      console.log(`🧹 Removing duplicate old key: ${old}`);
-      localStorage.removeItem(old);
+  let cleaned = 0;
+  oldKeys.forEach(key => {
+    if (localStorage.getItem(key)) {
+      localStorage.removeItem(key);
+      console.log(`🗑️ Removed old key: ${key}`);
+      cleaned++;
     }
   });
   
-  if (migrationCount > 0) {
-    console.log(`✅ Migrated ${migrationCount} data keys`);
+  if (cleaned > 0) {
+    console.log(`✅ Cleaned ${cleaned} old data keys`);
   }
-  
-  localStorage.setItem('data_migrated', 'true');
-  console.log('✅ Data migration complete');
 }
