@@ -202,10 +202,20 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useCampaigns() {
+export function useCampaigns(): CampaignContextType {
   const context = useContext(CampaignContext);
   if (context === undefined) {
-    throw new Error('useCampaigns must be used within CampaignProvider');
+    console.error('useCampaigns must be used within CampaignProvider. Returning empty default context.');
+    return {
+      campaigns: [],
+      businesses: [],
+      refreshCampaigns: () => {},
+      refreshBusinesses: () => {},
+      addOrUpdateCampaign: () => {},
+      deleteCampaign: () => {},
+      addOrUpdateBusiness: () => {},
+      deleteBusiness: () => {},
+    };
   }
   return context;
 }
