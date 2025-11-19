@@ -326,19 +326,14 @@ export const CustomerCampaigns = {
     CustomerCampaigns.list().filter((cc) => cc.campaignId === campaignId).length,
 };
 
-// Seed demo data if empty (only on first initialization)
+// Seed demo data if empty (handles both first-time and inconsistent states)
 export function seedIfEmpty() {
-  // Check if app has been initialized before
-  const isInitialized = localStorage.getItem('app_initialized');
-  if (isInitialized === 'true') {
-    console.log('✅ App already initialized, skipping seed');
-    return;
-  }
-
   const demoOwnerId = 'demo-business-admin';
+  const businesses = Businesses.list();
+  const campaigns = Campaigns.list();
   
-  // Seed demo business only if businesses are empty
-  if (Businesses.list().length === 0) {
+  // Case 1: First-time initialization (no businesses, no campaigns)
+  if (businesses.length === 0) {
     console.log('🌱 First-time initialization: seeding demo business');
     const demoBusiness = Businesses.add({
       name: 'Demo Coffee Shop',
@@ -352,28 +347,52 @@ export function seedIfEmpty() {
       ownerId: demoOwnerId
     });
 
-    // Seed campaigns linked to business only if campaigns are empty
-    if (Campaigns.list().length === 0) {
-      console.log('🌱 Seeding demo campaigns');
-      Campaigns.add({ 
-        businessId: demoBusiness.id,
-        name: 'Coffee Lovers', 
-        description: 'Buy 9 get 1 free', 
-        stampsRequired: 10, 
-        active: true,
-        ownerId: demoOwnerId,
-        contactEmail: 'coffee@demo.com',
-        socialLinks: {
-          website: 'https://example.com',
-          instagram: 'https://instagram.com/coffeelovers'
-        }
-      });
-    }
+    console.log('🌱 Seeding demo campaigns');
+    Campaigns.add({ 
+      businessId: demoBusiness.id,
+      name: 'Coffee Lovers', 
+      description: 'Buy 9 get 1 free', 
+      stampsRequired: 10, 
+      active: true,
+      ownerId: demoOwnerId,
+      contactEmail: 'coffee@demo.com',
+      socialLinks: {
+        website: 'https://example.com',
+        instagram: 'https://instagram.com/coffeelovers'
+      }
+    });
+    
+    localStorage.setItem('app_initialized', 'true');
+    console.log('✅ App initialization complete');
+    return;
   }
   
-  // Mark as initialized
-  localStorage.setItem('app_initialized', 'true');
-  console.log('✅ App initialization complete');
+  // Case 2: Inconsistent state (business exists but no campaigns)
+  if (businesses.length > 0 && campaigns.length === 0) {
+    console.log('🔧 Fixing inconsistent state: business exists but no campaigns');
+    const existingBusiness = businesses[0]; // Use first business
+    
+    console.log('🌱 Seeding demo campaigns for existing business');
+    Campaigns.add({ 
+      businessId: existingBusiness.id,
+      name: 'Coffee Lovers', 
+      description: 'Buy 9 get 1 free', 
+      stampsRequired: 10, 
+      active: true,
+      ownerId: existingBusiness.ownerId,
+      contactEmail: 'coffee@demo.com',
+      socialLinks: {
+        website: 'https://example.com',
+        instagram: 'https://instagram.com/coffeelovers'
+      }
+    });
+    
+    console.log('✅ Demo campaigns seeded for existing business');
+    return;
+  }
+  
+  // Case 3: All good, already has data
+  console.log('✅ App already has data, skipping seed');
 }
 
 // Helper functions for easy access
