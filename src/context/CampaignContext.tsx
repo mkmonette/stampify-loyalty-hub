@@ -146,9 +146,11 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         isInitialized
       });
       
-      // Only seed if app has never been initialized (first-time setup)
-      if (!isInitialized) {
-        console.log('🌱 First-time initialization: seeding demo data...');
+      // Seed if app has never been initialized OR if data is inconsistent
+      const needsSeeding = !isInitialized || (currentBusinesses.length > 0 && currentCampaigns.length === 0);
+      
+      if (needsSeeding) {
+        console.log('🌱 Seeding demo data...', { isInitialized, hasBusinesses: currentBusinesses.length > 0, hasCampaigns: currentCampaigns.length > 0 });
         seedIfEmpty();
         // Refresh after seeding
         refreshCampaigns();
@@ -162,8 +164,6 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         });
         if (currentCampaigns.length > 0) {
           console.log('🟩 All campaigns in memory:', currentCampaigns);
-        } else {
-          console.log('📭 No campaigns found (user may have deleted all campaigns)');
         }
       }
     }, 100);
