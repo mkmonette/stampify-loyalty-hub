@@ -77,17 +77,23 @@ export default function CampaignPublicPage() {
     
     if (found) {
       // Load business data from localStorage
+      let effectiveBusiness: Business | null = null;
       if (found.businessId) {
-        const foundBusiness = Businesses.findById(found.businessId);
-        setBusiness(foundBusiness || null);
+        const foundBusiness = Businesses.findById(found.businessId) || null;
+        setBusiness(foundBusiness);
+        effectiveBusiness = foundBusiness;
         console.log('🏢 Loaded business from localStorage:', foundBusiness);
       }
       
-      // Load branding
-      if (found.ownerId) {
-        const brandingSettings = getBrandingForOwner(found.ownerId);
+      // Determine owner for branding: prefer campaign.ownerId, fall back to business.ownerId
+      const ownerForBranding = found.ownerId || effectiveBusiness?.ownerId;
+      
+      if (ownerForBranding) {
+        const brandingSettings = getBrandingForOwner(ownerForBranding);
         setBranding(brandingSettings);
-        console.log('🎨 Loaded branding:', brandingSettings);
+        console.log('🎨 Loaded branding for owner:', ownerForBranding, brandingSettings);
+      } else {
+        console.warn('⚠️ No ownerId found for campaign or business; using default branding');
       }
     } else {
       console.warn('⚠️ Campaign not found for slug:', slug);
