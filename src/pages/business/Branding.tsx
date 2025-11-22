@@ -27,6 +27,9 @@ export default function BrandingPage() {
 
   useEffect(() => {
     const current = getBrandingForOwner(ownerId);
+    console.log('🎨 BrandingPage - ownerId:', ownerId);
+    console.log('🎨 BrandingPage - loaded branding for owner:', current);
+    console.log('📦 localStorage.db_tenant_settings (branding):', localStorage.getItem('db_tenant_settings'));
     setSaved(current);
     setPreview(current);
     setCampaigns(allCampaigns.map(c => ({ id: c.id, name: c.name })));
