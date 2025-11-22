@@ -54,6 +54,7 @@ export default function CampaignPublicPage() {
     console.log('📦 localStorage.campaigns:', localStorage.getItem('campaigns'));
     console.log('📦 localStorage.db_campaigns:', localStorage.getItem('db_campaigns'));
     console.log('📦 localStorage.businesses:', localStorage.getItem('businesses'));
+    console.log('📦 localStorage.db_tenant_settings (branding):', localStorage.getItem('db_tenant_settings'));
     
     if (!slug) {
       console.warn('⚠️ No slug provided');
